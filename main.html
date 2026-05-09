@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账先生</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ink: #14100a;
+  --ink2: #2a2018;
+  --paper: #f6f1e8;
+  --paper2: #ede6d4;
+  --paper3: #e4dbc8;
+  --white: #ffffff;
+  --red: #b83025;
+  --red2: #d94030;
+  --red-soft: #fdf1f0;
+  --gold: #a87820;
+  --gold2: #c9962a;
+  --gold-soft: #fdf8ee;
+  --green: #1a5e38;
+  --green2: #22854e;
+  --green-soft: #f0faf4;
+  --blue: #1a3a6b;
+  --blue2: #2456a0;
+  --gray: #7a6e5e;
+  --gray2: #a09080;
+  --border: #d8cdb8;
+  --border2: #ebe3d4;
+  --shadow-sm: 0 1px 4px rgba(20,16,10,0.08);
+  --shadow: 0 4px 20px rgba(20,16,10,0.10);
+  --shadow-lg: 0 12px 48px rgba(20,16,10,0.14);
+  --sidebar-w: 200px;
+  --topbar-h: 52px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══════════════════════════════
+   TOPBAR
+═══════════════════════════════ */
+.topbar {
+  height: var(--topbar-h);
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--ink2);
+  z-index: 100;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.logo-seal {
+  width: 32px; height: 32px;
+  background: var(--red);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 900; color: #fff;
+  letter-spacing: -1px; position: relative; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(184,48,37,0.4);
+}
+.logo-seal::after {
+  content: ''; position: absolute; inset: 3px;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 3px;
+}
+.logo-text {
+  font-size: 17px; font-weight: 700;
+  color: #e8d9b8; letter-spacing: 3px;
+}
+.topbar-sep { width: 1px; height: 20px; background: #333; }
+.company-picker {
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; padding: 5px 10px;
+  border-radius: 6px; transition: background 0.15s;
+  color: #c8baa0; font-size: 13px; letter-spacing: 0.5px;
+}
+.company-picker:hover { background: rgba(255,255,255,0.06); }
+.company-picker b { color: #e8d9b8; }
+.topbar-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+}
+.top-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 12px; letter-spacing: 1px;
+  color: #a09080; cursor: pointer;
+  transition: all 0.15s; border: none; background: transparent;
+  font-family: inherit;
+}
+.top-btn:hover { background: rgba(255,255,255,0.06); color: #e8d9b8; }
+.top-btn.primary {
+  background: var(--red); color: #fff;
+  box-shadow: 0 2px 8px rgba(184,48,37,0.35);
+}
+.top-btn.primary:hover { background: var(--red2); }
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #4caf50; animation: pulse 2.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ═══════════════════════════════
+   LAYOUT
+═══════════════════════════════ */
+.app-body {
+  flex: 1; display: flex; overflow: hidden;
+}
+
+/* ═══════════════════════════════
+   SIDEBAR
+═══════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--ink2);
+  display: flex; flex-direction: column;
+  flex-shrink: 0; overflow-y: auto;
+  border-right: 1px solid #222;
+}
+.nav-section { padding: 18px 0 4px; }
+.nav-section-label {
+  font-size: 10px; letter-spacing: 2.5px;
+  color: #5a5040; padding: 0 16px 8px;
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 16px; font-size: 13px;
+  color: #8a7a68; cursor: pointer;
+  transition: all 0.15s; letter-spacing: 0.3px;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+.nav-item:hover { color: #d4c4a8; background: rgba(255,255,255,0.03); }
+.nav-item.active {
+  color: #e8d9b8; background: rgba(168,120,32,0.12);
+  border-left-color: var(--gold2);
+}
+.nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--red);
+  color: #fff; font-size: 10px; padding: 1px 5px;
+  border-radius: 8px; font-weight: 700;
+}
+.sidebar-footer {
+  margin-top: auto; padding: 16px;
+  border-top: 1px solid #222;
+}
+.user-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px;
+  cursor: pointer; transition: background 0.15s;
+}
+.user-card:hover { background: rgba(255,255,255,0.04); }
+.user-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--gold); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.user-name { font-size: 12px; color: #a09080; letter-spacing: 0.5px; }
+.user-plan { font-size: 10px; color: #5a5040; letter-spacing: 1px; margin-top: 1px; }
+
+/* ═══════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════ */
+.main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.content-area {
+  flex: 1; overflow-y: auto; padding: 28px 32px;
+}
+
+/* ═══════════════════════════════
+   SCREEN SYSTEM
+═══════════════════════════════ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ═══════════════════════════════
+   PAGE HEADER
+═══════════════════════════════ */
+.page-header {
+  display: flex; align-items: flex-end;
+  justify-content: space-between; margin-bottom: 24px;
+}
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: 2px; color: var(--ink); }
+.page-title-en { font-size: 11px; color: var(--gray2); letter-spacing: 3px; margin-top: 3px; }
+.title-line {
+  width: 36px; height: 3px; background: var(--red);
+  border-radius: 2px; margin-top: 8px;
+}
+.header-actions { display: flex; gap: 10px; }
+
+/* ═══════════════════════════════
+   BUTTONS
+═══════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: 7px; border: none;
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  letter-spacing: 1px; cursor: pointer; transition: all 0.18s;
+}
+.btn-primary { background: var(--red); color: #fff; box-shadow: 0 2px 10px rgba(184,48,37,0.25); }
+.btn-primary:hover { background: var(--red2); transform: translateY(-1px); }
+.btn-primary:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--gray); }
+.btn-outline:hover { border-color: var(--gold2); color: var(--gold); }
+.btn-ghost { background: transparent; color: var(--gray); }
+.btn-ghost:hover { background: var(--paper2); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ═══════════════════════════════
+   CARDS
+═══════════════════════════════ */
+.card {
+  background: var(--white); border: 1px solid var(--border2);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.card-head {
+  background: var(--paper2); border-bottom: 1px solid var(--border2);
+  padding: 12px 18px; display: flex; align-items: center;
+  justify-content: space-between;
+}
+.card-title { font-size: 13px; font-weight: 700; letter-spacing: 1px; color: var(--ink); }
+.card-action { font-size: 12px; color: var(--blue2); cursor: pointer; letter-spacing: 0.5px; }
+.card-action:hover { color: var(--blue); }
+.card-body { padding: 18px; }
+
+/* ═══════════════════════════════
+   STAT CARDS
+═══════════════════════════════ */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+.stat-card {
+  background: var(--white); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.stat-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.stat-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card.c-red::before { background: var(--red); }
+.stat-card.c-gold::before { background: var(--gold2); }
+.stat-card.c-green::before { background: var(--green2); }
+.stat-card.c-blue::before { background: var(--blue2); }
+.stat-label { font-size: 11px; color: var(--gray2); letter-spacing: 1.5px; margin-bottom: 8px; }
+.stat-value { font-size: 26px; font-weight: 700; color: var(--ink); letter-spacing: 0.5px; }
+.stat-value .unit { font-size: 13px; color: var(--gray2); font-weight: 400; margin-left: 2px; }
+.stat-change { font-size: 11px; margin-top: 5px; }
+.stat-change.up { color: var(--green2); }
+.stat-change.dn { color: var(--red2); }
+.stat-change.warn { color: var(--gold2); }
+
+/* ═══════════════════════════════
+   TABLE
+═══════════════════════════════ */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  text-align: left; padding: 8px 12px;
+  font-size: 11px; letter-spacing: 1.5px; color: var(--gray2);
+  border-bottom: 1px solid var(--border2); font-weight: 600;
+  background: var(--paper);
+}
+td { padding: 10px 12px; border-bottom: 1px solid var(--border2); color: var(--ink); }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--paper); }
+.td-red { color: var(--red); font-weight: 600; }
+.td-green { color: var(--green2); font-weight: 600; }
+.td-gold { color: var(--gold); font-weight: 600; }
+
+/* ═══════════════════════════════
+   BADGES
+═══════════════════════════════ */
+.badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px; letter-spacing: 1px;
+}
+.badge-pending { background: #fff8e6; color: #8a6000; border: 1px solid #f0d580; }
+.badge-done { background: var(--green-soft); color: var(--green); border: 1px solid #b8e0c8; }
+.badge-warn { background: var(--red-soft); color: var(--red); border: 1px solid #f0c0bc; }
+.badge-draft { background: var(--paper2); color: var(--gray); border: 1px solid var(--border); }
+
+/* ═══════════════════════════════
+   TWO COL GRID
+═══════════════════════════════ */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* ═══════════════════════════════
+   SPINNER
+═══════════════════════════════ */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  display: inline-block; vertical-align: middle; margin-right: 6px;
+}
+.spinner.dark {
+  border-color: rgba(20,16,10,0.15); border-top-color: var(--ink);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════
+   UPLOAD ZONE
+═══════════════════════════════ */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px; padding: 48px 32px;
+  text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--paper);
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--gold2);
+  background: var(--gold-soft);
+}
+.upload-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+}
+.upload-icon { font-size: 44px; margin-bottom: 14px; }
+.upload-title { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: 1px; margin-bottom: 6px; }
+.upload-sub { font-size: 13px; color: var(--gray2); line-height: 1.6; }
+.upload-types {
+  display: flex; justify-content: center; gap: 8px;
+  margin-top: 16px; flex-wrap: wrap;
+}
+.upload-type-tag {
+  background: var(--paper2); border: 1px solid var(--border);
+  color: var(--gray); font-size: 11px; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════
+   AI RESULT PANEL
+═══════════════════════════════ */
+.ai-result-wrap { display: none; margin-top: 20px; }
+.ai-result-wrap.show { display: block; }
+.ai-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 8px;
+  margin-bottom: 14px; font-size: 13px;
+}
+.ai-banner.success { background: var(--green-soft); border: 1px solid #b8e0c8; color: var(--green); }
+.ai-banner.loading { background: var(--gold-soft); border: 1px solid #f0d580; color: var(--gold); }
+.ai-banner.error { background: var(--red-soft); border: 1px solid #f0c0bc; color: var(--red); }
+
+/* ═══════════════════════════════
+   VOUCHER FORM
+═══════════════════════════════ */
+.voucher-lines { border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; }
+.voucher-line-head {
+  display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 32px;
+  gap: 0; background: var(--paper2);
+  border-bottom: 1px solid var(--border2);
+}
+.voucher-line-head span {
+  padding: 8px 12px; font-size: 11px;
+  font-weight: 600; letter-spacing: 1px; color: var(--gray2);
+}
+.voucher-line-row {
+  display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 32px;
+  gap: 0; border-bottom: 1px solid var(--border2);
+  align-items: center;
+}
+.voucher-line-row:last-child { border-bottom: none; }
+.voucher-line-row input, .voucher-line-row select {
+  width: 100%; padding: 9px 12px; border: none; border-right: 1px solid var(--border2);
+  font-size: 13px; font-family: inherit; color: var(--ink);
+  background: transparent; outline: none;
+}
+.voucher-line-row input:focus, .voucher-line-row select:focus {
+  background: var(--gold-soft);
+}
+.voucher-line-row input:last-of-type { border-right: none; }
+.del-line-btn {
+  width: 32px; display: flex; align-items: center; justify-content: center;
+  color: var(--gray2); cursor: pointer; font-size: 16px;
+  transition: color 0.15s;
+}
+.del-line-btn:hover { color: var(--red); }
+.voucher-totals {
+  display: flex; justify-content: flex-end; gap: 32px;
+  padding: 10px 14px; background: var(--paper);
+  border-top: 1px solid var(--border2);
+  font-size: 13px;
+}
+.total-item { display: flex; align-items: center; gap: 8px; }
+.total-label { color: var(--gray2); letter-spacing: 1px; font-size: 11px; }
+.total-value { font-weight: 700; font-size: 15px; }
+
+/* ═══════════════════════════════
+   FORM FIELDS
+═══════════════════════════════ */
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: var(--gray); margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: 7px;
+  font-size: 13px; font-family: inherit; color: var(--ink);
+  background: var(--paper); outline: none; transition: border-color 0.2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--gold2); background: #fff;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ═══════════════════════════════
+   TAX CALENDAR ITEMS
+═══════════════════════════════ */
+.tax-items { display: flex; flex-direction: column; gap: 8px; }
+.tax-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 8px;
+  border: 1px solid var(--border2); font-size: 13px;
+  background: var(--white); transition: box-shadow 0.15s;
+}
+.tax-item:hover { box-shadow: var(--shadow-sm); }
+.tax-date {
+  background: var(--red); color: #fff; font-size: 10px;
+  padding: 3px 8px; border-radius: 4px; font-weight: 700;
+  flex-shrink: 0; letter-spacing: 1px;
+}
+.tax-date.done { background: var(--green2); }
+.tax-date.warn { background: var(--gold2); }
+.tax-name { flex: 1; }
+.tax-amt { font-weight: 700; color: var(--red); }
+.tax-amt.done { color: var(--green2); }
+
+/* ═══════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════ */
+.progress-wrap { margin: 10px 0; }
+.progress-bar { height: 5px; background: var(--paper3); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold2), var(--red)); transition: width 0.5s ease; }
+.progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--gray2); margin-top: 4px; letter-spacing: 0.5px; }
+
+/* ═══════════════════════════════
+   ALERTS
+═══════════════════════════════ */
+.alert { padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 14px; display: none; }
+.alert.show { display: flex; align-items: center; gap: 8px; }
+.alert-error { background: var(--red-soft); border: 1px solid #f0c0bc; color: var(--red); }
+.alert-success { background: var(--green-soft); border: 1px solid #b8e0c8; color: var(--green); }
+.alert-info { background: var(--gold-soft); border: 1px solid #f0d580; color: var(--gold); }
+
+/* ═══════════════════════════════
+   MODAL
+═══════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(20,16,10,0.5);
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000; backdrop-filter: blur(2px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--white); border-radius: 14px;
+  width: 560px; max-height: 85vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: modal-in 0.2s ease;
+}
+@keyframes modal-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-head {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: var(--white); z-index: 1;
+}
+.modal-title { font-size: 16px; font-weight: 700; letter-spacing: 1px; }
+.modal-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray2); font-size: 18px;
+  transition: background 0.15s;
+}
+.modal-close:hover { background: var(--paper2); }
+.modal-body { padding: 20px 24px; }
+.modal-foot {
+  padding: 16px 24px; border-top: 1px solid var(--border2);
+  display: flex; justify-content: flex-end; gap: 10px;
+  position: sticky; bottom: 0; background: var(--white);
+}
+
+/* ═══════════════════════════════
+   IMAGE PREVIEW
+═══════════════════════════════ */
+.img-preview {
+  width: 100%; max-height: 200px; object-fit: contain;
+  border-radius: 8px; border: 1px solid var(--border2);
+  background: var(--paper); margin-bottom: 14px; display: none;
+}
+.img-preview.show { display: block; }
+
+/* ═══════════════════════════════
+   SCROLLBAR
+═══════════════════════════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ═══════════════════════════════
+   EMPTY STATE
+═══════════════════════════════ */
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--gray2);
+}
+.empty-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.5; }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--gray); margin-bottom: 6px; letter-spacing: 1px; }
+.empty-sub { font-size: 13px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     TOPBAR
+═══════════════════════════════════════════ -->
+<div class="topbar">
+  <a class="logo" href="#">
+    <div class="logo-seal">账</div>
+    <span class="logo-text">账先生</span>
+  </a>
+  <div class="topbar-sep"></div>
+  <div class="company-picker" onclick="showCompanyMenu()">
+    🏢 <b id="top-company-name">加载中...</b> ▾
+  </div>
+  <div class="topbar-right">
+    <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#5a5040;margin-right:4px;">
+      <div class="status-dot"></div> AI在线
+    </div>
+    <button class="top-btn primary" onclick="showScreen('invoice')">
+      ＋ 上传发票
+    </button>
+    <button class="top-btn" onclick="doLogout()">退出</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BODY
+═══════════════════════════════════════════ -->
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-section-label">总览</div>
+      <div class="nav-item active" data-screen="dashboard">
+        <span class="nav-icon">⊞</span> 财务仪表盘
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">账务</div>
+      <div class="nav-item" data-screen="invoice">
+        <span class="nav-icon">🧾</span> 上传发票
+        <span class="nav-badge" id="badge-invoice" style="display:none">!</span>
+      </div>
+      <div class="nav-item" data-screen="voucher">
+        <span class="nav-icon">📝</span> 记账凭证
+      </div>
+      <div class="nav-item" data-screen="accounts">
+        <span class="nav-icon">📖</span> 科目余额
+      </div>
+      <div class="nav-item" data-screen="reports">
+        <span class="nav-icon">📊</span> 财务报表
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">税务</div>
+      <div class="nav-item" data-screen="tax">
+        <span class="nav-icon">🏛</span> 税务申报
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">人事</div>
+      <div class="nav-item" data-screen="employee">
+        <span class="nav-icon">👥</span> 员工档案
+      </div>
+      <div class="nav-item" data-screen="payroll">
+        <span class="nav-icon">💰</span> 薪资核算
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">资产</div>
+      <div class="nav-item" data-screen="assets">
+        <span class="nav-icon">🏢</span> 固定资产
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-name">加载中</div>
+          <div class="user-plan">免费版</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="content-area" id="content-area">
+
+      <!-- ══════════════ DASHBOARD ══════════════ -->
+      <div class="screen active" id="screen-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title">财务仪表盘</div>
+            <div class="page-title-en">FINANCIAL DASHBOARD</div>
+            <div class="title-line"></div>
+          </div>
+          <div class="header-actions">
+            <span style="font-size:12px;color:var(--gray2);" id="dashboard-period">2025年4月</span>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="dashboard-stats">
+          <div class="stat-card c-red">
+            <div class="stat-label">本月营业收入</div>
+            <div class="stat-value" id="stat-income">—<span class="unit">元</span></div>
+            <div class="stat-change up" id="stat-income-change">暂无数据</div>
+          </div>
+          <div class="stat-card c-gold">
+            <div class="stat-label">本月总支出</div>
+            <div class="stat-value" id="stat-expense">—<span class="unit">元</span></div>
+            <div class="stat-change dn" id="stat-expense-change">暂无数据</div>
+          </div>
+          <div class="stat-card c-green">
+            <div class="stat-label">本月净利润</div>
+            <div class="stat-value" id="stat-profit">—<span class="unit">元</span></div>
+            <div class="stat-change up" id="stat-profit-change">暂无数据</div>
+          </div>
+          <div class="stat-card c-blue">
+            <div class="stat-label">待审核凭证</div>
+            <div class="stat-value" id="stat-pending">0<span class="unit">张</span></div>
+            <div class="stat-change warn" id="stat-pending-change">点击处理</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:18px;">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">最近凭证</span>
+              <span class="card-action" onclick="showScreen('voucher')">全部 →</span>
+            </div>
+            <div class="card-body" style="padding:0;">
+              <div id="recent-vouchers">
+                <div class="empty-state" style="padding:32px;">
+                  <div class="empty-icon">📝</div>
+                  <div class="empty-title">暂无凭证</div>
+                  <div class="empty-sub">上传发票后将自动生成</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">税务日历</span>
+              <span class="card-action" onclick="showScreen('tax')">详情 →</span>
+            </div>
+            <div class="card-body">
+              <div class="tax-items">
+                <div class="tax-item">
+                  <span class="tax-date done">已完成</span>
+                  <span class="tax-name">增值税月报（上月）</span>
+                  <span class="tax-amt done">✓</span>
+                </div>
+                <div class="tax-item">
+                  <span class="tax-date warn">15日截止</span>
+                  <span class="tax-name">增值税月报（本月）</span>
+                  <span class="tax-amt" id="vat-amount">待计算</span>
+                </div>
+                <div class="tax-item">
+                  <span class="tax-date">季度</span>
+                  <span class="tax-name">企业所得税预缴</span>
+                  <span class="tax-amt" id="cit-amount">待计算</span>
+                </div>
+                <div class="tax-item">
+                  <span class="tax-date">每月</span>
+                  <span class="tax-name">个人所得税代扣代缴</span>
+                  <span class="tax-amt" id="iit-amount">待核算</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">快速入口</span>
+          </div>
+          <div class="card-body">
+            <div class="grid-3" style="gap:12px;">
+              <div onclick="showScreen('invoice')" style="border:1.5px solid var(--border2);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold2)';this.style.background='var(--gold-soft)'" onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
+                <div style="font-size:28px;margin-bottom:8px;">🧾</div>
+                <div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-bottom:4px;">上传发票</div>
+                <div style="font-size:11px;color:var(--gray2);">AI自动识别记账</div>
+              </div>
+              <div onclick="openVoucherModal()" style="border:1.5px solid var(--border2);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold2)';this.style.background='var(--gold-soft)'" onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
+                <div style="font-size:28px;margin-bottom:8px;">📝</div>
+                <div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-bottom:4px;">手动记账</div>
+                <div style="font-size:11px;color:var(--gray2);">直接填写借贷凭证</div>
+              </div>
+              <div onclick="showScreen('reports')" style="border:1.5px solid var(--border2);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold2)';this.style.background='var(--gold-soft)'" onmouseout="this.style.borderColor='var(--border2)';this.style.background=''">
+                <div style="font-size:28px;margin-bottom:8px;">📊</div>
+                <div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-bottom:4px;">生成报表</div>
+                <div style="font-size:11px;color:var(--gray2);">三大财务报表</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 上传发票 ══════════════ -->
+      <div class="screen" id="screen-invoice">
+        <div class="page-header">
+          <div>
+            <div class="page-title">上传发票</div>
+            <div class="page-title-en">AI INVOICE RECOGNITION</div>
+            <div class="title-line"></div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="align-items:start;gap:20px;">
+          <!-- 上传区 -->
+          <div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-head"><span class="card-title">上传票据 · AI自动识别</span></div>
+              <div class="card-body">
+                <div class="upload-zone" id="upload-zone">
+                  <input type="file" id="file-input" accept="image/*,.pdf"
+                    onchange="handleFileSelect(event)" />
+                  <div class="upload-icon">📎</div>
+                  <div class="upload-title">点击或拖拽上传票据</div>
+                  <div class="upload-sub">AI将自动识别发票信息<br>并生成借贷凭证</div>
+                  <div class="upload-types">
+                    <span class="upload-type-tag">增值税专票</span>
+                    <span class="upload-type-tag">增值税普票</span>
+                    <span class="upload-type-tag">电子发票</span>
+                    <span class="upload-type-tag">收据</span>
+                    <span class="upload-type-tag">银行回单</span>
+                  </div>
+                </div>
+                <img class="img-preview" id="img-preview" />
+
+                <!-- AI识别结果 -->
+                <div class="ai-result-wrap" id="ai-result-wrap">
+                  <div class="ai-banner loading" id="ai-banner">
+                    <span class="spinner dark"></span> AI识别中，请稍候...
+                  </div>
+
+                  <!-- 识别出的发票信息 -->
+                  <div id="invoice-fields" style="display:none;">
+                    <div style="font-size:11px;color:var(--gray2);letter-spacing:2px;margin-bottom:10px;">识别结果</div>
+                    <div class="field-row">
+                      <div class="field">
+                        <label>发票类型</label>
+                        <select id="inv-type">
+                          <option value="special">增值税专用发票</option>
+                          <option value="normal">增值税普通发票</option>
+                          <option value="electronic">电子发票</option>
+                          <option value="receipt">收据/其他</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label>进项/销项</label>
+                        <select id="inv-direction">
+                          <option value="in">进项（采购/费用）</option>
+                          <option value="out">销项（销售收入）</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="field-row">
+                      <div class="field">
+                        <label>对方名称</label>
+                        <input type="text" id="inv-party" placeholder="销售方/购买方名称" />
+                      </div>
+                      <div class="field">
+                        <label>发票日期</label>
+                        <input type="date" id="inv-date" />
+                      </div>
+                    </div>
+                    <div class="field-row-3">
+                      <div class="field">
+                        <label>不含税金额</label>
+                        <input type="number" id="inv-amount" placeholder="0.00" oninput="calcTax()" />
+                      </div>
+                      <div class="field">
+                        <label>税率</label>
+                        <select id="inv-taxrate" onchange="calcTax()">
+                          <option value="0.13">13%</option>
+                          <option value="0.09">9%</option>
+                          <option value="0.06">6%</option>
+                          <option value="0.03">3%（小规模）</option>
+                          <option value="0.05">5%</option>
+                          <option value="0">免税/0%</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label>税额</label>
+                        <input type="number" id="inv-tax" placeholder="0.00" />
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>摘要/用途</label>
+                      <input type="text" id="inv-summary" placeholder="例：采购办公用品、销售产品收入..." />
+                    </div>
+                  </div>
+
+                  <!-- AI生成的凭证分录 -->
+                  <div id="ai-voucher-section" style="display:none;">
+                    <div style="font-size:11px;color:var(--gray2);letter-spacing:2px;margin:14px 0 10px;">AI生成的借贷分录</div>
+                    <div class="voucher-lines" id="ai-voucher-lines"></div>
+                    <div style="margin-top:14px;display:flex;gap:10px;">
+                      <button class="btn btn-primary" onclick="saveInvoiceVoucher()">
+                        ✓ 确认保存凭证
+                      </button>
+                      <button class="btn btn-outline" onclick="resetUpload()">重新上传</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 发票台账 -->
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">发票台账</span>
+              <span class="card-action">共 <span id="invoice-count">0</span> 张</span>
+            </div>
+            <div class="card-body" style="padding:0;max-height:520px;overflow-y:auto;">
+              <div id="invoice-list">
+                <div class="empty-state" style="padding:40px;">
+                  <div class="empty-icon">🧾</div>
+                  <div class="empty-title">暂无发票记录</div>
+                  <div class="empty-sub">上传第一张发票开始记账</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 记账凭证 ══════════════ -->
+      <div class="screen" id="screen-voucher">
+        <div class="page-header">
+          <div>
+            <div class="page-title">记账凭证</div>
+            <div class="page-title-en">ACCOUNTING VOUCHERS</div>
+            <div class="title-line"></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-outline btn-sm" onclick="loadVouchers()">刷新</button>
+            <button class="btn btn-primary btn-sm" onclick="openVoucherModal()">＋ 新建凭证</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>凭证号</th><th>日期</th><th>摘要</th>
+                  <th>借方合计</th><th>贷方合计</th><th>来源</th><th>状态</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="voucher-tbody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray2);">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 科目余额 ══════════════ -->
+      <div class="screen" id="screen-accounts">
+        <div class="page-header">
+          <div>
+            <div class="page-title">科目余额表</div>
+            <div class="page-title-en">ACCOUNT BALANCES</div>
+            <div class="title-line"></div>
+          </div>
+          <div class="header-actions">
+            <select style="padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:13px;background:var(--paper);" id="balance-period">
+              <option>2025年4月</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadAccountBalances()">查询</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>科目编码</th><th>科目名称</th><th>期初余额</th>
+                  <th>本期借方</th><th>本期贷方</th><th>期末余额</th>
+                </tr>
+              </thead>
+              <tbody id="accounts-tbody">
+                <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray2);">选择期间后点击查询</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 财务报表 ══════════════ -->
+      <div class="screen" id="screen-reports">
+        <div class="page-header">
+          <div>
+            <div class="page-title">财务报表</div>
+            <div class="page-title-en">FINANCIAL STATEMENTS</div>
+            <div class="title-line"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <button class="btn btn-primary btn-sm" id="rpt-tab-bs" onclick="showReport('bs')">资产负债表</button>
+          <button class="btn btn-outline btn-sm" id="rpt-tab-is" onclick="showReport('is')">利润表</button>
+          <button class="btn btn-outline btn-sm" id="rpt-tab-cf" onclick="showReport('cf')">现金流量表</button>
+        </div>
+        <div id="report-content">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">资产负债表 · <span id="report-period">当前期间</span></span>
+              <span class="card-action">导出Excel ↓</span>
+            </div>
+            <div class="card-body" id="report-body">
+              <div class="empty-state">
+                <div class="empty-icon">📊</div>
+                <div class="empty-title">暂无数据</div>
+                <div class="empty-sub">记账凭证审核后将自动生成报表</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 税务申报 ══════════════ -->
+      <div class="screen" id="screen-tax">
+        <div class="page-header">
+          <div>
+            <div class="page-title">税务申报</div>
+            <div class="page-title-en">TAX FILING CENTER</div>
+            <div class="title-line"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:18px;">
+          <div class="card">
+            <div class="card-head"><span class="card-title">增值税申报 · 本月</span></div>
+            <div class="card-body">
+              <table>
+                <tr><th>项目</th><th>金额</th><th>税率</th><th>税额</th></tr>
+                <tr><td>销项税额（含税收入）</td><td id="vat-sales" class="td-green">—</td><td>13%</td><td id="vat-output" class="td-red">—</td></tr>
+                <tr><td>进项税额（已认证）</td><td>—</td><td>—</td><td id="vat-input" class="td-green">—</td></tr>
+                <tr style="font-weight:700;"><td>应纳增值税</td><td>—</td><td>—</td><td id="vat-payable" class="td-red">—</td></tr>
+              </table>
+              <div style="margin-top:14px;">
+                <button class="btn btn-primary btn-sm" onclick="calcVAT()">AI计算增值税</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">申报记录</span></div>
+            <div class="card-body" style="padding:0;">
+              <div id="tax-filing-list">
+                <div class="empty-state" style="padding:32px;">
+                  <div class="empty-icon">🏛</div>
+                  <div class="empty-title">暂无申报记录</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 员工档案 ══════════════ -->
+      <div class="screen" id="screen-employee">
+        <div class="page-header">
+          <div>
+            <div class="page-title">员工档案</div>
+            <div class="page-title-en">EMPLOYEE RECORDS</div>
+            <div class="title-line"></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary btn-sm" onclick="openEmployeeModal()">＋ 添加员工</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table>
+              <thead>
+                <tr><th>工号</th><th>姓名</th><th>部门</th><th>职位</th><th>基本工资</th><th>入职日期</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody id="employee-tbody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray2);">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 薪资核算 ══════════════ -->
+      <div class="screen" id="screen-payroll">
+        <div class="page-header">
+          <div>
+            <div class="page-title">薪资核算</div>
+            <div class="page-title-en">PAYROLL CALCULATION</div>
+            <div class="title-line"></div>
+          </div>
+          <div class="header-actions">
+            <select style="padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:13px;background:var(--paper);" id="payroll-period">
+              <option>2025年4月</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="calcPayroll()">
+              ⚡ AI一键核算
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>姓名</th><th>应发工资</th><th>社保（个人）</th>
+                  <th>公积金（个人）</th><th>个人所得税</th>
+                  <th>实发工资</th><th>状态</th>
+                </tr>
+              </thead>
+              <tbody id="payroll-tbody">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray2);">点击"AI一键核算"计算本月工资</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ 固定资产 ══════════════ -->
+      <div class="screen" id="screen-assets">
+        <div class="page-header">
+          <div>
+            <div class="page-title">固定资产台账</div>
+            <div class="page-title-en">FIXED ASSETS</div>
+            <div class="title-line"></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary btn-sm" onclick="openAssetModal()">＋ 录入资产</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table>
+              <thead>
+                <tr><th>资产编号</th><th>名称</th><th>类别</th><th>原值</th><th>累计折旧</th><th>净值</th><th>折旧方法</th><th>状态</th></tr>
+              </thead>
+              <tbody id="assets-tbody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray2);">暂无固定资产记录</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /main -->
+</div><!-- /app-body -->
+
+<!-- ═══════════════════════════════════════════
+     MODAL: 新建凭证
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-voucher">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">新建记账凭证</span>
+      <span class="modal-close" onclick="closeModal('voucher')">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label>凭证日期</label>
+          <input type="date" id="v-date" />
+        </div>
+        <div class="field">
+          <label>摘要</label>
+          <input type="text" id="v-summary" placeholder="业务摘要..." />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray2);letter-spacing:2px;margin-bottom:8px;">借贷分录</div>
+      <div class="voucher-lines">
+        <div class="voucher-line-head">
+          <span>会计科目</span><span>摘要</span><span>借方金额</span><span>贷方金额</span><span></span>
+        </div>
+        <div id="voucher-line-rows"></div>
+      </div>
+      <div class="voucher-totals">
+        <div class="total-item">
+          <span class="total-label">借方合计</span>
+          <span class="total-value td-green" id="total-debit">¥0.00</span>
+        </div>
+        <div class="total-item">
+          <span class="total-label">贷方合计</span>
+          <span class="total-value td-red" id="total-credit">¥0.00</span>
+        </div>
+        <div class="total-item" id="balance-status">
+          <span style="font-size:12px;color:var(--gray2);">借贷未平衡</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="addVoucherLine()" style="margin-top:10px;">＋ 添加分录行</button>
+      <div id="alert-voucher" class="alert" style="margin-top:12px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('voucher')">取消</button>
+      <button class="btn btn-primary" onclick="saveVoucher()" id="btn-save-voucher">保存凭证</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL: 添加员工
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-employee">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">添加员工</span>
+      <span class="modal-close" onclick="closeModal('employee')">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>姓名 *</label><input type="text" id="emp-name" placeholder="张三" /></div>
+        <div class="field"><label>工号</label><input type="text" id="emp-no" placeholder="001" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>部门</label><input type="text" id="emp-dept" placeholder="财务部" /></div>
+        <div class="field"><label>职位</label><input type="text" id="emp-position" placeholder="会计" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>入职日期</label><input type="date" id="emp-entry" /></div>
+        <div class="field"><label>基本工资（元）</label><input type="number" id="emp-salary" placeholder="8000" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>社保缴费基数</label><input type="number" id="emp-social-base" placeholder="与工资相同" /></div>
+        <div class="field"><label>公积金缴费基数</label><input type="number" id="emp-fund-base" placeholder="与工资相同" /></div>
+      </div>
+      <div style="font-size:11px;color:var(--gray2);letter-spacing:1.5px;margin:12px 0 8px;">个税专项扣除（月）</div>
+      <div class="field-row">
+        <div class="field"><label>子女教育</label><input type="number" id="emp-child" placeholder="0" /></div>
+        <div class="field"><label>赡养老人</label><input type="number" id="emp-elder" placeholder="0" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>住房贷款/租金</label><input type="number" id="emp-house" placeholder="0" /></div>
+        <div class="field"><label>继续教育</label><input type="number" id="emp-study" placeholder="0" /></div>
+      </div>
+      <div id="alert-employee" class="alert"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('employee')">取消</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">保存员工</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+const SUPABASE_URL = 'https://vmyemvmbjtlvpbicgsjc.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZteWVtdm1ianRsdnBiaWNnc2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2NzYwNDQsImV4cCI6MjA5MzI1MjA0NH0.-9dKeHOr2qZyinqwcKnQvFh0Yr9MFr_ULLmnqKXAWeI'
+const QWEN_API_KEY = 'YOUR_QWEN_API_KEY' // ← 填入你的通义千问API Key
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+let currentUser = null
+let currentCompany = null
+let accountsList = []
+let voucherLineCount = 0
+let currentInvoiceData = null
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession()
+  if (!session) { window.location.href = 'index.html'; return }
+  currentUser = session.user
+
+  // 显示用户信息
+  const meta = currentUser.user_metadata || {}
+  const name = meta.display_name || meta.phone || '用户'
+  document.getElementById('sidebar-name').textContent = name
+  document.getElementById('sidebar-avatar').textContent = name.slice(-1)
+
+  // 加载公司
+  const cid = localStorage.getItem('zxs_cid')
+  const cname = localStorage.getItem('zxs_cname')
+  if (cid && cname) {
+    currentCompany = { id: cid, name: cname }
+    document.getElementById('top-company-name').textContent = cname
+  } else {
+    await loadCompany()
+  }
+
+  // 加载科目列表
+  await loadAccounts()
+  // 加载仪表盘
+  await loadDashboard()
+  // 设置导航
+  setupNav()
+
+  // 设置今天日期
+  const today = new Date().toISOString().split('T')[0]
+  const vdate = document.getElementById('v-date')
+  if (vdate) vdate.value = today
+  const invdate = document.getElementById('inv-date')
+  if (invdate) invdate.value = today
+}
+
+async function loadCompany() {
+  const { data } = await sb.from('companies').select('*').eq('owner_id', currentUser.id).limit(1)
+  if (data && data.length > 0) {
+    currentCompany = data[0]
+    localStorage.setItem('zxs_cid', data[0].id)
+    localStorage.setItem('zxs_cname', data[0].name)
+    document.getElementById('top-company-name').textContent = data[0].name
+  } else {
+    window.location.href = 'index.html'
+  }
+}
+
+async function loadAccounts() {
+  if (!currentCompany) return
+  const { data } = await sb.from('accounts')
+    .select('code,name,category,direction')
+    .eq('company_id', currentCompany.id)
+    .eq('is_active', true)
+    .order('code')
+  accountsList = data || []
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function setupNav() {
+  document.querySelectorAll('.nav-item[data-screen]').forEach(item => {
+    item.addEventListener('click', () => {
+      const screen = item.dataset.screen
+      showScreen(screen)
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+      item.classList.add('active')
+    })
+  })
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById('screen-' + id)?.classList.add('active')
+  document.querySelectorAll('.nav-item[data-screen]').forEach(n => {
+    n.classList.toggle('active', n.dataset.screen === id)
+  })
+  // 触发对应数据加载
+  if (id === 'voucher') loadVouchers()
+  if (id === 'employee') loadEmployees()
+  if (id === 'invoice') loadInvoiceList()
+  if (id === 'assets') loadAssets()
+  document.getElementById('content-area').scrollTop = 0
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+async function loadDashboard() {
+  if (!currentCompany) return
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+  document.getElementById('dashboard-period').textContent = `${year}年${month}月`
+
+  // 待审凭证数量
+  const { count } = await sb.from('vouchers')
+    .select('id', { count: 'exact', head: true })
+    .eq('company_id', currentCompany.id)
+    .eq('status', 'pending')
+
+  document.getElementById('stat-pending').innerHTML = `${count||0}<span class="unit">张</span>`
+
+  // 最近凭证
+  const { data: recent } = await sb.from('vouchers')
+    .select('*')
+    .eq('company_id', currentCompany.id)
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  if (recent && recent.length > 0) {
+    document.getElementById('recent-vouchers').innerHTML = `
+      <table>
+        <thead><tr><th>凭证号</th><th>日期</th><th>摘要</th><th>金额</th><th>状态</th></tr></thead>
+        <tbody>
+          ${recent.map(v => `
+            <tr>
+              <td style="font-size:12px;color:var(--gray)">${v.voucher_no}</td>
+              <td>${v.voucher_date}</td>
+              <td>${v.summary||'—'}</td>
+              <td class="td-green">¥${fmtNum(v.total_debit)}</td>
+              <td>${badgeStatus(v.status)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`
+  }
+}
+
+// ══════════════════════════════════════════════
+// 发票上传 + AI识别
+// ══════════════════════════════════════════════
+function handleFileSelect(e) {
+  const file = e.target.files[0]
+  if (!file) return
+
+  // 预览图片
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const preview = document.getElementById('img-preview')
+      preview.src = ev.target.result
+      preview.classList.add('show')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // 触发AI识别
+  recognizeInvoice(file)
+}
+
+// 拖拽上传
+const uploadZone = document.getElementById('upload-zone')
+if (uploadZone) {
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over') })
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'))
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault()
+    uploadZone.classList.remove('drag-over')
+    const file = e.dataTransfer.files[0]
+    if (file) {
+      const input = document.getElementById('file-input')
+      const dt = new DataTransfer()
+      dt.items.add(file)
+      input.files = dt.files
+      handleFileSelect({ target: input })
+    }
+  })
+}
+
+async function recognizeInvoice(file) {
+  const wrap = document.getElementById('ai-result-wrap')
+  const banner = document.getElementById('ai-banner')
+  const fieldsDiv = document.getElementById('invoice-fields')
+  const voucherSection = document.getElementById('ai-voucher-section')
+
+  wrap.classList.add('show')
+  banner.className = 'ai-banner loading'
+  banner.innerHTML = '<span class="spinner dark"></span> AI识别中，正在分析票据...'
+  fieldsDiv.style.display = 'none'
+  voucherSection.style.display = 'none'
+
+  try {
+    // 将图片转为base64
+    const base64 = await fileToBase64(file)
+    const isImage = file.type.startsWith('image/')
+
+    // 调用Qwen VL识别发票
+    const prompt = `请识别这张票据/发票，提取以下信息并用JSON格式返回（只返回JSON，不要其他文字）：
+{
+  "invoice_type": "增值税专用发票/增值税普通发票/电子发票/收据/银行回单/其他",
+  "direction": "in/out（in=进项/采购/费用，out=销项/收入）",
+  "party_name": "对方名称（销售方或购买方）",
+  "party_tax_no": "对方税号",
+  "invoice_date": "发票日期YYYY-MM-DD",
+  "amount": 不含税金额数字,
+  "tax_rate": 税率小数如0.13,
+  "tax_amount": 税额数字,
+  "total_amount": 含税总额,
+  "summary": "业务摘要/货物名称",
+  "confidence": 0-1之间的置信度
+}`
+
+    let recognized = null
+
+    if (QWEN_API_KEY !== 'YOUR_QWEN_API_KEY') {
+      const payload = {
+        model: 'qwen-vl-max',
+        messages: [{
+          role: 'user',
+          content: isImage ? [
+            { type: 'image_url', image_url: { url: `data:${file.type};base64,${base64}` } },
+            { type: 'text', text: prompt }
+          ] : [{ type: 'text', text: prompt + '\n\n（PDF文件，请根据文件名和类型判断）' }]
+        }]
+      }
+      const resp = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${QWEN_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const data = await resp.json()
+      const text = data.choices?.[0]?.message?.content || ''
+      const jsonStr = text.replace(/```json|```/g, '').trim()
+      recognized = JSON.parse(jsonStr)
+    } else {
+      // Demo模式：模拟识别结果
+      await new Promise(r => setTimeout(r, 1500))
+      recognized = {
+        invoice_type: '增值税普通发票',
+        direction: 'in',
+        party_name: '示例供应商有限公司',
+        invoice_date: new Date().toISOString().split('T')[0],
+        amount: 1000,
+        tax_rate: 0.13,
+        tax_amount: 130,
+        total_amount: 1130,
+        summary: '办公用品采购',
+        confidence: 0.92
+      }
+    }
+
+    currentInvoiceData = recognized
+    fillInvoiceFields(recognized)
+
+    banner.className = 'ai-banner success'
+    banner.innerHTML = `✅ 识别完成（置信度 ${Math.round((recognized.confidence||0.9)*100)}%），请核对信息后确认`
+    fieldsDiv.style.display = 'block'
+
+    // 生成凭证分录
+    generateVoucherLines(recognized)
+    voucherSection.style.display = 'block'
+
+  } catch(err) {
+    console.error(err)
+    banner.className = 'ai-banner error'
+    banner.innerHTML = `⚠ 识别失败，请手动填写信息。错误：${err.message}`
+    fieldsDiv.style.display = 'block'
+  }
+}
+
+function fillInvoiceFields(data) {
+  const typeMap = { '增值税专用发票':'special', '增值税普通发票':'normal', '电子发票':'electronic', '收据':'receipt' }
+  setVal('inv-type', typeMap[data.invoice_type] || 'normal')
+  setVal('inv-direction', data.direction || 'in')
+  setVal('inv-party', data.party_name || '')
+  setVal('inv-date', data.invoice_date || '')
+  setVal('inv-amount', data.amount || '')
+  setVal('inv-taxrate', data.tax_rate || 0.13)
+  setVal('inv-tax', data.tax_amount || '')
+  setVal('inv-summary', data.summary || '')
+}
+
+function calcTax() {
+  const amount = parseFloat(document.getElementById('inv-amount').value) || 0
+  const rate = parseFloat(document.getElementById('inv-taxrate').value) || 0
+  document.getElementById('inv-tax').value = (amount * rate).toFixed(2)
+}
+
+function generateVoucherLines(data) {
+  const container = document.getElementById('ai-voucher-lines')
+  const dir = data.direction || 'in'
+  const amount = parseFloat(data.amount) || 0
+  const tax = parseFloat(data.tax_amount) || 0
+  const total = amount + tax
+
+  let lines = []
+
+  if (dir === 'in') {
+    // 进项：采购/费用
+    lines = [
+      { account: '6602 管理费用', summary: data.summary || '采购费用', debit: amount.toFixed(2), credit: '' },
+      { account: '2221001 应交增值税-进项', summary: '进项税额', debit: tax > 0 ? tax.toFixed(2) : '', credit: '' },
+      { account: '2202 应付账款', summary: `应付${data.party_name||''}款`, debit: '', credit: total.toFixed(2) },
+    ]
+  } else {
+    // 销项：收入
+    lines = [
+      { account: '1122 应收账款', summary: `收${data.party_name||''}款`, debit: total.toFixed(2), credit: '' },
+      { account: '6001 主营业务收入', summary: data.summary || '销售收入', debit: '', credit: amount.toFixed(2) },
+      { account: '2221001 应交增值税-销项', summary: '销项税额', debit: '', credit: tax > 0 ? tax.toFixed(2) : '' },
+    ]
+  }
+
+  container.innerHTML = `
+    <div class="voucher-line-head">
+      <span>会计科目</span><span>摘要</span><span>借方金额</span><span>贷方金额</span>
+    </div>
+    ${lines.map(l => `
+      <div class="voucher-line-row">
+        <div style="padding:10px 12px;font-size:13px;border-right:1px solid var(--border2);">${l.account}</div>
+        <div style="padding:10px 12px;font-size:13px;border-right:1px solid var(--border2);color:var(--gray);">${l.summary}</div>
+        <div style="padding:10px 12px;font-size:13px;border-right:1px solid var(--border2);color:var(--green2);font-weight:${l.debit?'600':'400'};">${l.debit ? '¥'+l.debit : ''}</div>
+        <div style="padding:10px 12px;font-size:13px;color:var(--red);font-weight:${l.credit?'600':'400'};">${l.credit ? '¥'+l.credit : ''}</div>
+      </div>
+    `).join('')}
+  `
+}
+
+async function saveInvoiceVoucher() {
+  if (!currentCompany || !currentInvoiceData) return
+
+  const inv = {
+    direction: document.getElementById('inv-direction').value,
+    invoice_type: document.getElementById('inv-type').value,
+    invoice_date: document.getElementById('inv-date').value,
+    seller_name: document.getElementById('inv-direction').value === 'in' ? document.getElementById('inv-party').value : '',
+    buyer_name: document.getElementById('inv-direction').value === 'out' ? document.getElementById('inv-party').value : '',
+    amount: parseFloat(document.getElementById('inv-amount').value) || 0,
+    tax_rate: parseFloat(document.getElementById('inv-taxrate').value) || 0,
+    tax_amount: parseFloat(document.getElementById('inv-tax').value) || 0,
+    total_amount: (parseFloat(document.getElementById('inv-amount').value)||0) + (parseFloat(document.getElementById('inv-tax').value)||0),
+    status: 'normal',
+    company_id: currentCompany.id,
+    ocr_data: currentInvoiceData
+  }
+
+  // 保存发票
+  const { data: savedInv, error: invErr } = await sb.from('invoices').insert(inv).select().single()
+  if (invErr) { alert('保存失败：' + invErr.message); return }
+
+  // 生成凭证号
+  const now = new Date()
+  const vno = `记-${now.getFullYear()}-${String(await getNextVoucherSeq()).padStart(4,'0')}`
+
+  // 计算分录
+  const dir = inv.direction
+  const amount = inv.amount, tax = inv.tax_amount, total = inv.total_amount
+  const summary = document.getElementById('inv-summary').value
+
+  let lines = []
+  if (dir === 'in') {
+    lines = [
+      { account_code:'6602', account_name:'管理费用', summary, debit_amount:amount, credit_amount:0, line_no:1 },
+      { account_code:'2221001', account_name:'应交增值税-进项', summary:'进项税额', debit_amount:tax, credit_amount:0, line_no:2 },
+      { account_code:'2202', account_name:'应付账款', summary:`应付${inv.seller_name||''}款`, debit_amount:0, credit_amount:total, line_no:3 },
+    ]
+  } else {
+    lines = [
+      { account_code:'1122', account_name:'应收账款', summary:`收${inv.buyer_name||''}款`, debit_amount:total, credit_amount:0, line_no:1 },
+      { account_code:'6001', account_name:'主营业务收入', summary, debit_amount:0, credit_amount:amount, line_no:2 },
+      { account_code:'2221001', account_name:'应交增值税-销项', summary:'销项税额', debit_amount:0, credit_amount:tax, line_no:3 },
+    ]
+  }
+
+  // 保存凭证
+  const { data: v, error: vErr } = await sb.from('vouchers').insert({
+    company_id: currentCompany.id,
+    voucher_no: vno,
+    voucher_date: inv.invoice_date || now.toISOString().split('T')[0],
+    period_year: now.getFullYear(),
+    period_month: now.getMonth() + 1,
+    summary: summary || `${dir==='in'?'采购':'销售'}凭证`,
+    total_debit: lines.reduce((s,l) => s+l.debit_amount, 0),
+    total_credit: lines.reduce((s,l) => s+l.credit_amount, 0),
+    status: 'pending',
+    source: 'ai',
+    ai_generated: true,
+    creator_id: currentUser.id
+  }).select().single()
+
+  if (vErr) { alert('凭证保存失败：' + vErr.message); return }
+
+  // 保存分录
+  const linesWithIds = lines.map(l => ({ ...l, voucher_id: v.id, company_id: currentCompany.id }))
+  await sb.from('voucher_lines').insert(linesWithIds)
+
+  alert('✅ 发票和凭证保存成功！凭证号：' + vno)
+  resetUpload()
+  loadDashboard()
+}
+
+function resetUpload() {
+  document.getElementById('file-input').value = ''
+  document.getElementById('img-preview').classList.remove('show')
+  document.getElementById('ai-result-wrap').classList.remove('show')
+  currentInvoiceData = null
+}
+
+async function loadInvoiceList() {
+  if (!currentCompany) return
+  const { data, count } = await sb.from('invoices')
+    .select('*', { count: 'exact' })
+    .eq('company_id', currentCompany.id)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  document.getElementById('invoice-count').textContent = count || 0
+
+  if (!data || data.length === 0) return
+
+  document.getElementById('invoice-list').innerHTML = `
+    <table>
+      <thead><tr><th>日期</th><th>方向</th><th>对方</th><th>金额</th><th>税额</th><th>状态</th></tr></thead>
+      <tbody>
+        ${data.map(inv => `
+          <tr>
+            <td>${inv.invoice_date||'—'}</td>
+            <td><span class="badge ${inv.direction==='in'?'badge-done':'badge-pending'}">${inv.direction==='in'?'进项':'销项'}</span></td>
+            <td>${inv.seller_name||inv.buyer_name||'—'}</td>
+            <td class="${inv.direction==='in'?'td-red':'td-green'}">¥${fmtNum(inv.total_amount)}</td>
+            <td>¥${fmtNum(inv.tax_amount)}</td>
+            <td>${badgeStatus(inv.status)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+// ══════════════════════════════════════════════
+// 凭证管理
+// ══════════════════════════════════════════════
+async function loadVouchers() {
+  if (!currentCompany) return
+  const { data } = await sb.from('vouchers')
+    .select('*')
+    .eq('company_id', currentCompany.id)
+    .order('voucher_date', { ascending: false })
+    .limit(100)
+
+  const tbody = document.getElementById('voucher-tbody')
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray2);">暂无凭证，请上传发票或手动新建</td></tr>'
+    return
+  }
+
+  tbody.innerHTML = data.map(v => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px;">${v.voucher_no}</td>
+      <td>${v.voucher_date}</td>
+      <td>${v.summary||'—'}</td>
+      <td class="td-green">¥${fmtNum(v.total_debit)}</td>
+      <td class="td-red">¥${fmtNum(v.total_credit)}</td>
+      <td>${v.ai_generated ? '<span style="font-size:11px;color:var(--gold);">⚡AI</span>' : '手动'}</td>
+      <td>${badgeStatus(v.status)}</td>
+      <td>
+        <span style="font-size:12px;color:var(--blue2);cursor:pointer;margin-right:8px;" onclick="approveVoucher('${v.id}')">审核</span>
+        <span style="font-size:12px;color:var(--red);cursor:pointer;" onclick="deleteVoucher('${v.id}')">删除</span>
+      </td>
+    </tr>
+  `).join('')
+}
+
+async function approveVoucher(id) {
+  await sb.from('vouchers').update({ status: 'approved', approved_at: new Date().toISOString(), approver_id: currentUser.id }).eq('id', id)
+  loadVouchers()
+}
+
+async function deleteVoucher(id) {
+  if (!confirm('确认删除该凭证？')) return
+  await sb.from('voucher_lines').delete().eq('voucher_id', id)
+  await sb.from('vouchers').delete().eq('id', id)
+  loadVouchers()
+}
+
+function openVoucherModal() {
+  voucherLineCount = 0
+  document.getElementById('voucher-line-rows').innerHTML = ''
+  addVoucherLine()
+  addVoucherLine()
+  document.getElementById('modal-voucher').classList.add('show')
+}
+
+function addVoucherLine() {
+  voucherLineCount++
+  const id = voucherLineCount
+  const options = accountsList.map(a => `<option value="${a.code}">${a.code} ${a.name}</option>`).join('')
+  const row = document.createElement('div')
+  row.className = 'voucher-line-row'
+  row.id = `vline-${id}`
+  row.innerHTML = `
+    <select onchange="updateTotals()">${options}</select>
+    <input type="text" placeholder="分录摘要" />
+    <input type="number" placeholder="0.00" oninput="updateTotals()" class="debit-input" />
+    <input type="number" placeholder="0.00" oninput="updateTotals()" class="credit-input" />
+    <div class="del-line-btn" onclick="removeLine(${id})">×</div>
+  `
+  document.getElementById('voucher-line-rows').appendChild(row)
+}
+
+function removeLine(id) {
+  const el = document.getElementById(`vline-${id}`)
+  if (el) el.remove()
+  updateTotals()
+}
+
+function updateTotals() {
+  let debit = 0, credit = 0
+  document.querySelectorAll('.debit-input').forEach(el => debit += parseFloat(el.value)||0)
+  document.querySelectorAll('.credit-input').forEach(el => credit += parseFloat(el.value)||0)
+  document.getElementById('total-debit').textContent = '¥' + debit.toFixed(2)
+  document.getElementById('total-credit').textContent = '¥' + credit.toFixed(2)
+  const balanced = Math.abs(debit - credit) < 0.01
+  document.getElementById('balance-status').innerHTML = balanced
+    ? '<span style="color:var(--green2);font-size:12px;">✓ 借贷平衡</span>'
+    : '<span style="color:var(--red);font-size:12px;">⚠ 借贷不平衡</span>'
+}
+
+async function saveVoucher() {
+  if (!currentCompany) return
+  const date = document.getElementById('v-date').value
+  const summary = document.getElementById('v-summary').value
+  if (!date) { showModalAlert('voucher','error','请选择凭证日期'); return }
+
+  // 收集分录
+  const rows = document.querySelectorAll('#voucher-line-rows .voucher-line-row')
+  const lines = []
+  let totalDebit = 0, totalCredit = 0
+
+  rows.forEach((row, i) => {
+    const sel = row.querySelector('select')
+    const inputs = row.querySelectorAll('input')
+    const code = sel?.value
+    const sum = inputs[0]?.value || ''
+    const debit = parseFloat(inputs[1]?.value) || 0
+    const credit = parseFloat(inputs[2]?.value) || 0
+    if (code && (debit > 0 || credit > 0)) {
+      const acct = accountsList.find(a => a.code === code)
+      lines.push({ account_code: code, account_name: acct?.name || code, summary: sum, debit_amount: debit, credit_amount: credit, line_no: i+1 })
+      totalDebit += debit; totalCredit += credit
+    }
+  })
+
+  if (lines.length === 0) { showModalAlert('voucher','error','请至少填写一行分录'); return }
+  if (Math.abs(totalDebit - totalCredit) > 0.01) { showModalAlert('voucher','error','借贷金额不平衡，无法保存'); return }
+
+  const btn = document.getElementById('btn-save-voucher')
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>保存中...'
+
+  const d = new Date(date)
+  const vno = `记-${d.getFullYear()}-${String(await getNextVoucherSeq()).padStart(4,'0')}`
+
+  const { data: v, error } = await sb.from('vouchers').insert({
+    company_id: currentCompany.id, voucher_no: vno,
+    voucher_date: date, period_year: d.getFullYear(), period_month: d.getMonth()+1,
+    summary, total_debit: totalDebit, total_credit: totalCredit,
+    status: 'pending', source: 'manual', creator_id: currentUser.id
+  }).select().single()
+
+  if (error) { showModalAlert('voucher','error','保存失败：'+error.message); btn.disabled=false; btn.textContent='保存凭证'; return }
+
+  await sb.from('voucher_lines').insert(lines.map(l => ({ ...l, voucher_id: v.id, company_id: currentCompany.id })))
+
+  closeModal('voucher')
+  btn.disabled = false; btn.textContent = '保存凭证'
+  loadVouchers(); loadDashboard()
+}
+
+async function getNextVoucherSeq() {
+  const { count } = await sb.from('vouchers').select('id', { count: 'exact', head: true }).eq('company_id', currentCompany.id)
+  return (count || 0) + 1
+}
+
+// ══════════════════════════════════════════════
+// 科目余额
+// ══════════════════════════════════════════════
+async function loadAccountBalances() {
+  if (!currentCompany) return
+  // 从凭证分录汇总各科目发生额
+  const { data: lines } = await sb.from('voucher_lines')
+    .select('account_code, account_name, debit_amount, credit_amount')
+    .eq('company_id', currentCompany.id)
+
+  const map = {}
+  ;(lines || []).forEach(l => {
+    if (!map[l.account_code]) map[l.account_code] = { name: l.account_name, debit: 0, credit: 0 }
+    map[l.account_code].debit += l.debit_amount
+    map[l.account_code].credit += l.credit_amount
+  })
+
+  const tbody = document.getElementById('accounts-tbody')
+  const entries = Object.entries(map).sort((a,b) => a[0].localeCompare(b[0]))
+
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray2);">暂无发生额数据</td></tr>'
+    return
+  }
+
+  tbody.innerHTML = entries.map(([code, v]) => {
+    const balance = v.debit - v.credit
+    return `<tr>
+      <td style="font-family:monospace;">${code}</td>
+      <td>${v.name}</td>
+      <td>0.00</td>
+      <td class="td-green">¥${fmtNum(v.debit)}</td>
+      <td class="td-red">¥${fmtNum(v.credit)}</td>
+      <td class="${balance>=0?'td-green':'td-red'}">¥${fmtNum(Math.abs(balance))}</td>
+    </tr>`
+  }).join('')
+}
+
+// ══════════════════════════════════════════════
+// 员工管理
+// ══════════════════════════════════════════════
+async function loadEmployees() {
+  if (!currentCompany) return
+  const { data } = await sb.from('employees').select('*').eq('company_id', currentCompany.id).order('created_at')
+  const tbody = document.getElementById('employee-tbody')
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray2);">暂无员工，点击右上角添加</td></tr>'
+    return
+  }
+  tbody.innerHTML = data.map(e => `
+    <tr>
+      <td>${e.emp_no||'—'}</td>
+      <td style="font-weight:600;">${e.name}</td>
+      <td>${e.department||'—'}</td>
+      <td>${e.position||'—'}</td>
+      <td class="td-green">¥${fmtNum(e.base_salary)}</td>
+      <td>${e.entry_date||'—'}</td>
+      <td><span class="badge ${e.status==='active'?'badge-done':'badge-draft'}">${e.status==='active'?'在职':'离职'}</span></td>
+      <td>
+        <span style="font-size:12px;color:var(--red);cursor:pointer;" onclick="deleteEmployee('${e.id}')">删除</span>
+      </td>
+    </tr>
+  `).join('')
+}
+
+function openEmployeeModal() {
+  document.getElementById('modal-employee').classList.add('show')
+  document.getElementById('emp-entry').value = new Date().toISOString().split('T')[0]
+}
+
+async function saveEmployee() {
+  const name = document.getElementById('emp-name').value.trim()
+  if (!name) { showModalAlert('employee','error','请输入员工姓名'); return }
+
+  const salary = parseFloat(document.getElementById('emp-salary').value) || 0
+  const { error } = await sb.from('employees').insert({
+    company_id: currentCompany.id,
+    name, emp_no: document.getElementById('emp-no').value,
+    department: document.getElementById('emp-dept').value,
+    position: document.getElementById('emp-position').value,
+    entry_date: document.getElementById('emp-entry').value,
+    base_salary: salary,
+    social_base: parseFloat(document.getElementById('emp-social-base').value) || salary,
+    fund_base: parseFloat(document.getElementById('emp-fund-base').value) || salary,
+    deduct_child: parseFloat(document.getElementById('emp-child').value) || 0,
+    deduct_elder: parseFloat(document.getElementById('emp-elder').value) || 0,
+    deduct_house: parseFloat(document.getElementById('emp-house').value) || 0,
+    deduct_study: parseFloat(document.getElementById('emp-study').value) || 0,
+    status: 'active'
+  })
+
+  if (error) { showModalAlert('employee','error','保存失败：'+error.message); return }
+  closeModal('employee')
+  loadEmployees()
+}
+
+async function deleteEmployee(id) {
+  if (!confirm('确认删除该员工？')) return
+  await sb.from('employees').delete().eq('id', id)
+  loadEmployees()
+}
+
+// ══════════════════════════════════════════════
+// 薪资核算（个税公式）
+// ══════════════════════════════════════════════
+async function calcPayroll() {
+  if (!currentCompany) return
+  const { data: employees } = await sb.from('employees')
+    .select('*').eq('company_id', currentCompany.id).eq('status', 'active')
+
+  if (!employees || employees.length === 0) {
+    alert('暂无在职员工，请先添加员工档案')
+    return
+  }
+
+  const now = new Date()
+  const year = now.getFullYear(), month = now.getMonth() + 1
+
+  const rows = employees.map(emp => {
+    const gross = emp.base_salary
+    const socialBase = emp.social_base || gross
+    const fundBase = emp.fund_base || gross
+
+    // 社保个人部分（北京比例：养老8%+医疗2%+失业0.5%=10.5%）
+    const socialPersonal = +(socialBase * 0.105).toFixed(2)
+    // 公积金个人部分（12%）
+    const fundPersonal = +(fundBase * 0.12).toFixed(2)
+
+    // 个税专项扣除
+    const deductions = (emp.deduct_child||0) + (emp.deduct_elder||0) + (emp.deduct_house||0) + (emp.deduct_study||0)
+
+    // 应纳税所得额 = 工资 - 5000起征点 - 社保 - 公积金 - 专项扣除
+    const taxable = Math.max(0, gross - 5000 - socialPersonal - fundPersonal - deductions)
+    const tax = calcIIT(taxable)
+
+    const net = +(gross - socialPersonal - fundPersonal - tax).toFixed(2)
+
+    // 单位部分
+    const socialCompany = +(socialBase * 0.165).toFixed(2) // 16.5%
+    const fundCompany = +(fundBase * 0.12).toFixed(2)
+    const totalCost = +(gross + socialCompany + fundCompany).toFixed(2)
+
+    return {
+      company_id: currentCompany.id,
+      employee_id: emp.id,
+      period_year: year, period_month: month,
+      base_salary: gross, gross_salary: gross,
+      social_personal: socialPersonal,
+      fund_personal: fundPersonal,
+      taxable_income: taxable,
+      income_tax: tax,
+      net_salary: net,
+      social_company: socialCompany,
+      fund_company: fundCompany,
+      total_cost: totalCost,
+      status: 'draft',
+      _name: emp.name
+    }
+  })
+
+  // 显示结果
+  document.getElementById('payroll-tbody').innerHTML = rows.map(r => `
+    <tr>
+      <td style="font-weight:600;">${r._name}</td>
+      <td class="td-green">¥${fmtNum(r.gross_salary)}</td>
+      <td class="td-red">¥${fmtNum(r.social_personal)}</td>
+      <td class="td-red">¥${fmtNum(r.fund_personal)}</td>
+      <td class="td-red">¥${fmtNum(r.income_tax)}</td>
+      <td class="td-green" style="font-weight:700;">¥${fmtNum(r.net_salary)}</td>
+      <td><span class="badge badge-pending">草稿</span></td>
+    </tr>
+  `).join('')
+
+  // 保存到数据库
+  for (const r of rows) {
+    const { _name, ...data } = r
+    await sb.from('payroll').upsert(data, { onConflict: 'company_id,employee_id,period_year,period_month' })
+  }
+}
+
+// 个人所得税计算（月度预扣预缴）
+function calcIIT(taxable) {
+  const brackets = [
+    [36000/12, 0.03, 0],
+    [144000/12, 0.10, 210],
+    [300000/12, 0.20, 1410],
+    [420000/12, 0.25, 2660],
+    [660000/12, 0.30, 4410],
+    [960000/12, 0.35, 7160],
+    [Infinity, 0.45, 15160]
+  ]
+  for (const [threshold, rate, deduction] of brackets) {
+    if (taxable <= threshold) return Math.max(0, +(taxable * rate - deduction).toFixed(2))
+  }
+  return 0
+}
+
+// ══════════════════════════════════════════════
+// 固定资产
+// ══════════════════════════════════════════════
+async function loadAssets() {
+  if (!currentCompany) return
+  const { data } = await sb.from('assets').select('*').eq('company_id', currentCompany.id).order('created_at')
+  const tbody = document.getElementById('assets-tbody')
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray2);">暂无固定资产记录</td></tr>'
+    return
+  }
+  const methodMap = { straight:'直线法', declining:'双倍余额', sum_of_years:'年数总和' }
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td style="font-family:monospace;">${a.asset_no||'—'}</td>
+      <td style="font-weight:600;">${a.name}</td>
+      <td>${a.category||'—'}</td>
+      <td class="td-green">¥${fmtNum(a.original_value)}</td>
+      <td class="td-red">¥${fmtNum(a.accumulated_depreciation)}</td>
+      <td class="td-green">¥${fmtNum(a.net_value||a.original_value)}</td>
+      <td>${methodMap[a.depreciation_method]||a.depreciation_method}</td>
+      <td><span class="badge badge-done">${a.status==='active'?'在用':'处置'}</span></td>
+    </tr>
+  `).join('')
+}
+
+function openAssetModal() {
+  alert('固定资产录入功能即将上线')
+}
+
+// ══════════════════════════════════════════════
+// 增值税计算
+// ══════════════════════════════════════════════
+async function calcVAT() {
+  if (!currentCompany) return
+  const now = new Date()
+  const { data: lines } = await sb.from('voucher_lines')
+    .select('account_code, debit_amount, credit_amount')
+    .eq('company_id', currentCompany.id)
+
+  let output = 0, input = 0
+  ;(lines || []).forEach(l => {
+    if (l.account_code === '2221001') {
+      output += l.credit_amount  // 销项
+      input += l.debit_amount    // 进项
+    }
+  })
+
+  const payable = Math.max(0, output - input)
+  document.getElementById('vat-output').textContent = '¥' + fmtNum(output)
+  document.getElementById('vat-input').textContent = '¥' + fmtNum(input)
+  document.getElementById('vat-payable').textContent = '¥' + fmtNum(payable)
+  document.getElementById('vat-amount').textContent = '¥' + fmtNum(payable)
+}
+
+// ══════════════════════════════════════════════
+// 报表
+// ══════════════════════════════════════════════
+function showReport(type) {
+  const tabs = { bs: 'rpt-tab-bs', is: 'rpt-tab-is', cf: 'rpt-tab-cf' }
+  Object.entries(tabs).forEach(([k, id]) => {
+    document.getElementById(id).className = k===type ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'
+  })
+  const names = { bs:'资产负债表', is:'利润表', cf:'现金流量表' }
+  document.querySelector('#report-content .card-title').textContent = names[type] + ' · 当前期间'
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function fmtNum(n) {
+  if (!n && n !== 0) return '0.00'
+  return Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function badgeStatus(status) {
+  const map = {
+    draft: ['badge-draft','草稿'],
+    pending: ['badge-pending','待审核'],
+    approved: ['badge-done','已审核'],
+    rejected: ['badge-warn','已驳回'],
+    normal: ['badge-done','正常'],
+    void: ['badge-warn','作废'],
+  }
+  const [cls, label] = map[status] || ['badge-draft', status]
+  return `<span class="badge ${cls}">${label}</span>`
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id)
+  if (el) el.value = val
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader()
+    r.onload = () => res(r.result.split(',')[1])
+    r.onerror = rej
+    r.readAsDataURL(file)
+  })
+}
+
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('show')
+}
+
+function showModalAlert(name, type, msg) {
+  const el = document.getElementById('alert-' + name)
+  if (el) { el.className = `alert alert-${type} show`; el.textContent = msg }
+}
+
+async function doLogout() {
+  await sb.auth.signOut()
+  localStorage.removeItem('zxs_cid')
+  localStorage.removeItem('zxs_cname')
+  window.location.href = 'index.html'
+}
+
+function showCompanyMenu() {
+  // 预留：多公司切换
+}
+
+// 关闭modal点击背景
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('show')
+  })
+})
+
+// 启动
+init()
+</script>
+</body>
+</html>
