@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账先生 · 登录</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ink: #1a1209;
+  --paper: #f7f3ec;
+  --paper2: #ede7d6;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --gold: #b8882a;
+  --gold2: #d4a843;
+  --green: #1a6b3a;
+  --gray: #7a6e5e;
+  --border: #d4c9b0;
+  --white: #ffffff;
+  --shadow: rgba(26,18,9,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--paper);
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(184,136,42,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(192,57,43,0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+.page { display: none; width: 100%; max-width: 440px; padding: 24px 16px; }
+.page.active { display: block; }
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 40px 40px 36px;
+  box-shadow: 0 8px 40px var(--shadow);
+}
+.logo-wrap { text-align: center; margin-bottom: 32px; }
+.logo-seal {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px; background: var(--red); border-radius: 10px;
+  font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -2px;
+  margin-bottom: 12px; box-shadow: 0 4px 16px rgba(192,57,43,0.3); position: relative;
+}
+.logo-seal::after {
+  content: ''; position: absolute; inset: 4px;
+  border: 1.5px solid rgba(255,255,255,0.35); border-radius: 6px;
+}
+.logo-name { font-size: 24px; font-weight: 700; color: var(--ink); letter-spacing: 4px; display: block; }
+.logo-slogan { font-size: 12px; color: var(--gray); letter-spacing: 2px; margin-top: 5px; display: block; }
+.auth-tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 28px; }
+.auth-tab {
+  flex: 1; text-align: center; padding: 10px 0;
+  font-size: 15px; font-weight: 600; letter-spacing: 2px;
+  cursor: pointer; color: var(--gray);
+  border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+}
+.auth-tab.active { color: var(--red); border-bottom-color: var(--red); }
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; color: var(--gray); margin-bottom: 7px; }
+.phone-wrap {
+  display: flex; align-items: center;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--paper); overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.phone-wrap:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,136,42,0.1); background: #fff; }
+.phone-prefix {
+  padding: 11px 12px 11px 14px; font-size: 14px; color: var(--gray);
+  border-right: 1px solid var(--border); background: var(--paper2);
+  white-space: nowrap; flex-shrink: 0;
+}
+.phone-wrap input {
+  flex: 1; padding: 11px 14px; border: none; outline: none;
+  font-size: 15px; font-family: inherit; color: var(--ink);
+  background: transparent; letter-spacing: 2px;
+}
+.phone-wrap input::placeholder { color: #bbb; letter-spacing: 0; font-size: 14px; }
+.field input[type=password], .field input[type=text] {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 14px; font-family: inherit; color: var(--ink);
+  background: var(--paper); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input[type=password]:focus, .field input[type=text]:focus {
+  border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,136,42,0.1); background: #fff;
+}
+.field input::placeholder { color: #bbb; }
+.pwd-strength { margin-top: 6px; display: flex; gap: 4px; }
+.pwd-bar { height: 3px; flex: 1; border-radius: 2px; background: var(--border); transition: background 0.3s; }
+.pwd-bar.weak { background: var(--red2); }
+.pwd-bar.medium { background: var(--gold2); }
+.pwd-bar.strong { background: var(--green); }
+.pwd-label { font-size: 11px; color: var(--gray); margin-top: 4px; }
+.btn {
+  width: 100%; padding: 13px; border: none; border-radius: 8px;
+  font-size: 15px; font-weight: 700; font-family: inherit;
+  letter-spacing: 3px; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: var(--red); color: #fff; box-shadow: 0 4px 16px rgba(192,57,43,0.25); }
+.btn-primary:hover { background: var(--red2); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--gray); margin-top: 10px; }
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.alert { padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 16px; display: none; }
+.alert.show { display: block; }
+.alert-error { background: #fdf0ef; border: 1px solid #f5c6c2; color: var(--red); }
+.alert-success { background: #f0faf4; border: 1px solid #b8e6c8; color: var(--green); }
+.card-footer { text-align: center; margin-top: 20px; font-size: 12px; color: var(--gray); }
+.card-footer a { color: var(--gold); text-decoration: none; font-weight: 600; }
+.spinner {
+  display: inline-block; width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  margin-right: 8px; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.wizard-header { text-align: center; margin-bottom: 24px; }
+.wizard-title { font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: 2px; margin-bottom: 5px; }
+.wizard-sub { font-size: 12px; color: var(--gray); letter-spacing: 1px; }
+.steps { display: flex; justify-content: center; margin-bottom: 28px; }
+.step { display: flex; align-items: center; }
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--gray);
+  background: var(--white); transition: all 0.3s; flex-shrink: 0;
+}
+.step-dot.active { border-color: var(--red); color: var(--red); }
+.step-dot.done { background: var(--red); border-color: var(--red); color: #fff; }
+.step-line { width: 44px; height: 2px; background: var(--border); transition: background 0.3s; }
+.step-line.done { background: var(--red); }
+.field select {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 14px; font-family: inherit; color: var(--ink);
+  background: var(--paper); outline: none; transition: border-color 0.2s;
+}
+.field select:focus { border-color: var(--gold); background: #fff; }
+.type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.type-card {
+  border: 2px solid var(--border); border-radius: 10px;
+  padding: 14px 10px; cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.type-card:hover { border-color: var(--gold); }
+.type-card.selected { border-color: var(--red); background: #fdf5f5; }
+.type-icon { font-size: 22px; margin-bottom: 5px; }
+.type-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.type-desc { font-size: 11px; color: var(--gray); margin-top: 3px; line-height: 1.5; }
+.confirm-box { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; }
+.confirm-row { font-size: 13px; line-height: 2.2; color: var(--ink); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.success-wrap { text-align: center; padding: 16px 0; }
+.success-icon { font-size: 52px; margin-bottom: 14px; }
+.success-title { font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: 2px; margin-bottom: 8px; }
+.success-sub { font-size: 13px; color: var(--gray); line-height: 1.8; margin-bottom: 28px; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: 登录/注册 -->
+<div class="page active" id="page-auth">
+  <div class="card">
+    <div class="logo-wrap">
+      <div class="logo-seal">账</div>
+      <span class="logo-name">账 先 生</span>
+      <span class="logo-slogan">AI 驱动 · 中国企业会计助手</span>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">登 录</div>
+      <div class="auth-tab" onclick="switchTab('register')">注 册</div>
+    </div>
+    <div id="alert-auth" class="alert"></div>
+
+    <!-- 登录表单 -->
+    <div id="form-login">
+      <div class="field">
+        <label>手机号码</label>
+        <div class="phone-wrap">
+          <span class="phone-prefix">🇨🇳 +86</span>
+          <input type="tel" id="login-phone" placeholder="请输入手机号" maxlength="11"
+            oninput="this.value=this.value.replace(/\D/g,'')"
+            onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()" />
+        </div>
+      </div>
+      <div class="field">
+        <label>密码</label>
+        <input type="password" id="login-pwd" placeholder="请输入密码"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <button class="btn btn-primary" id="btn-login" onclick="doLogin()">登 录</button>
+      <button class="btn btn-outline" onclick="showForgot()">忘记密码</button>
+    </div>
+
+    <!-- 注册表单 -->
+    <div id="form-register" style="display:none">
+      <div class="field">
+        <label>您的姓名</label>
+        <input type="text" id="reg-name" placeholder="请输入真实姓名" />
+      </div>
+      <div class="field">
+        <label>手机号码</label>
+        <div class="phone-wrap">
+          <span class="phone-prefix">🇨🇳 +86</span>
+          <input type="tel" id="reg-phone" placeholder="请输入手机号" maxlength="11"
+            oninput="this.value=this.value.replace(/\D/g,'')" />
+        </div>
+      </div>
+      <div class="field">
+        <label>设置密码（至少8位）</label>
+        <input type="password" id="reg-pwd" placeholder="字母+数字组合更安全"
+          oninput="checkPwdStrength(this.value)" />
+        <div class="pwd-strength">
+          <div class="pwd-bar" id="bar1"></div>
+          <div class="pwd-bar" id="bar2"></div>
+          <div class="pwd-bar" id="bar3"></div>
+        </div>
+        <div class="pwd-label" id="pwd-label"></div>
+      </div>
+      <div class="field">
+        <label>确认密码</label>
+        <input type="password" id="reg-pwd2" placeholder="再次输入密码"
+          onkeydown="if(event.key==='Enter')doRegister()" />
+      </div>
+      <button class="btn btn-primary" id="btn-register" onclick="doRegister()">注 册</button>
+    </div>
+    <div class="card-footer">注册即代表同意 <a href="#">服务条款</a> 与 <a href="#">隐私政策</a></div>
+  </div>
+</div>
+
+<!-- PAGE 2: 建公司向导 -->
+<div class="page" id="page-setup">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div class="logo-seal" style="width:40px;height:40px;font-size:18px;display:inline-flex;">账</div>
+    </div>
+    <div class="wizard-header">
+      <div class="wizard-title" id="wiz-title">创建您的公司档案</div>
+      <div class="wizard-sub" id="wiz-sub">只需一分钟，完成后即可开始记账</div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot active" id="dot-1">1</div>
+        <div class="step-line" id="line-1"></div>
+      </div>
+      <div class="step">
+        <div class="step-dot" id="dot-2">2</div>
+        <div class="step-line" id="line-2"></div>
+      </div>
+      <div class="step">
+        <div class="step-dot" id="dot-3">3</div>
+      </div>
+    </div>
+    <div id="alert-setup" class="alert"></div>
+
+    <!-- Step 1 -->
+    <div id="step1">
+      <div class="field">
+        <label>公司名称 *</label>
+        <input type="text" id="co-name" placeholder="例：北京示例科技有限公司" />
+      </div>
+      <div class="field">
+        <label>统一社会信用代码</label>
+        <input type="text" id="co-taxno" placeholder="18位税号（选填）" maxlength="18" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>联系电话</label>
+          <input type="tel" id="co-phone" placeholder="选填" />
+        </div>
+        <div class="field">
+          <label>注册城市</label>
+          <input type="text" id="co-city" placeholder="例：北京" />
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(2)">下 一 步 →</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="step2" style="display:none">
+      <div style="font-size:12px;color:var(--gray);letter-spacing:1px;margin-bottom:12px;">增值税纳税人类型</div>
+      <div class="type-grid">
+        <div class="type-card selected" id="tp-small" onclick="selTax('small')">
+          <div class="type-icon">🏪</div>
+          <div class="type-name">小规模纳税人</div>
+          <div class="type-desc">年销售额≤500万<br>征收率 3% / 5%</div>
+        </div>
+        <div class="type-card" id="tp-general" onclick="selTax('general')">
+          <div class="type-icon">🏢</div>
+          <div class="type-name">一般纳税人</div>
+          <div class="type-desc">年销售额>500万<br>进项税可抵扣</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--gray);letter-spacing:1px;margin-bottom:12px;">适用会计准则</div>
+      <div class="type-grid">
+        <div class="type-card selected" id="ac-small" onclick="selAcct('small_biz')">
+          <div class="type-icon">📋</div>
+          <div class="type-name">小企业准则</div>
+          <div class="type-desc">适合中小企业<br>（推荐）</div>
+        </div>
+        <div class="type-card" id="ac-general" onclick="selAcct('general')">
+          <div class="type-icon">📊</div>
+          <div class="type-name">企业会计准则</div>
+          <div class="type-desc">适合规模较大<br>企业</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" style="margin-top:0;flex:1" onclick="goStep(1)">← 返回</button>
+        <button class="btn btn-primary" style="flex:2" onclick="goStep(3)">下 一 步 →</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="step3" style="display:none">
+      <div class="confirm-box">
+        <div style="font-size:11px;color:var(--gray);letter-spacing:2px;margin-bottom:10px;">确认信息</div>
+        <div class="confirm-row" id="confirm-info"></div>
+      </div>
+      <button class="btn btn-primary" id="btn-create" onclick="createCompany()">
+        确 认 创 建 · 开 始 记 账
+      </button>
+      <button class="btn btn-outline" onclick="goStep(2)">← 修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: 成功 -->
+<div class="page" id="page-success">
+  <div class="card">
+    <div class="success-wrap">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">账户创建成功</div>
+      <div class="success-sub" id="success-msg"></div>
+      <button class="btn btn-primary" onclick="goMain()">进 入 账 先 生 →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vmyemvmbjtlvpbicgsjc.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZteWVtdm1ianRsdnBiaWNnc2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2NzYwNDQsImV4cCI6MjA5MzI1MjA0NH0.-9dKeHOr2qZyinqwcKnQvFh0Yr9MFr_ULLmnqKXAWeI'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const toEmail = phone => `${phone}@zhangxiansheng.com`
+
+let taxType = 'small', acctType = 'small_biz', currentUser = null
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) { currentUser = session.user; await checkCompany() }
+}
+
+async function checkCompany() {
+  const { data } = await sb.from('companies').select('id,name').eq('owner_id', currentUser.id).limit(1)
+  if (data && data.length > 0) {
+    localStorage.setItem('zxs_cid', data[0].id)
+    localStorage.setItem('zxs_cname', data[0].name)
+    goMain()
+  } else {
+    showPage('setup')
+  }
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById('page-' + id).classList.add('active')
+}
+
+function showAlert(zone, type, msg) {
+  const el = document.getElementById('alert-' + zone)
+  el.className = `alert alert-${type} show`
+  el.textContent = msg
+}
+function clearAlert(zone) {
+  const el = document.getElementById('alert-' + zone)
+  if (el) el.className = 'alert'
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1))
+  })
+  document.getElementById('form-login').style.display = tab==='login' ? 'block' : 'none'
+  document.getElementById('form-register').style.display = tab==='register' ? 'block' : 'none'
+  clearAlert('auth')
+}
+
+function checkPwdStrength(pwd) {
+  const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3')]
+  const label = document.getElementById('pwd-label')
+  bars.forEach(b => b.className = 'pwd-bar')
+  if (!pwd) { label.textContent = ''; return }
+  let score = 0
+  if (pwd.length >= 8) score++
+  if (/[A-Za-z]/.test(pwd) && /\d/.test(pwd)) score++
+  if (/[^A-Za-z0-9]/.test(pwd) || pwd.length >= 12) score++
+  const lvl = [['weak','弱'],['medium','中'],['strong','强']]
+  for (let i = 0; i < score; i++) bars[i].className = 'pwd-bar ' + lvl[score-1][0]
+  label.textContent = score > 0 ? `密码强度：${lvl[score-1][1]}` : ''
+  label.style.color = score===1?'var(--red2)':score===2?'var(--gold2)':'var(--green)'
+}
+
+function validPhone(p) { return /^1[3-9]\d{9}$/.test(p) }
+
+async function doLogin() {
+  clearAlert('auth')
+  const phone = document.getElementById('login-phone').value.trim()
+  const pwd = document.getElementById('login-pwd').value
+  if (!phone || !pwd) { showAlert('auth','error','请填写手机号和密码'); return }
+  if (!validPhone(phone)) { showAlert('auth','error','请输入有效的11位手机号'); return }
+
+  const btn = document.getElementById('btn-login')
+  btn.disabled = true
+  btn.innerHTML = '<span class="spinner"></span>登录中...'
+
+  const { data, error } = await sb.auth.signInWithPassword({ email: toEmail(phone), password: pwd })
+
+  if (error) {
+    showAlert('auth','error','手机号或密码错误')
+    btn.disabled = false; btn.textContent = '登 录'; return
+  }
+  currentUser = data.user
+  btn.innerHTML = '✓ 登录成功'
+  setTimeout(() => checkCompany(), 600)
+}
+
+async function doRegister() {
+  clearAlert('auth')
+  const name = document.getElementById('reg-name').value.trim()
+  const phone = document.getElementById('reg-phone').value.trim()
+  const pwd = document.getElementById('reg-pwd').value
+  const pwd2 = document.getElementById('reg-pwd2').value
+
+  if (!name) { showAlert('auth','error','请输入您的姓名'); return }
+  if (!validPhone(phone)) { showAlert('auth','error','请输入有效的11位手机号'); return }
+  if (pwd.length < 8) { showAlert('auth','error','密码至少8位'); return }
+  if (pwd !== pwd2) { showAlert('auth','error','两次输入的密码不一致'); return }
+
+  const btn = document.getElementById('btn-register')
+  btn.disabled = true
+  btn.innerHTML = '<span class="spinner"></span>注册中...'
+
+  const { data, error } = await sb.auth.signUp({
+    email: toEmail(phone), password: pwd,
+    options: { data: { display_name: name, phone } }
+  })
+
+  if (error) {
+    const msg = error.message.includes('already registered') ? '该手机号已注册，请直接登录' : error.message
+    showAlert('auth','error','注册失败：' + msg)
+    btn.disabled = false; btn.textContent = '注 册'; return
+  }
+
+  currentUser = data.user
+  showAlert('auth','success','注册成功！')
+  setTimeout(() => showPage('setup'), 800)
+}
+
+function showForgot() {
+  showAlert('auth','success','请联系管理员重置密码')
+}
+
+function goStep(n) {
+  clearAlert('setup')
+  if (n===2) {
+    if (!document.getElementById('co-name').value.trim()) {
+      showAlert('setup','error','请填写公司名称'); return
+    }
+  }
+  if (n===3) {
+    const tl = taxType==='small'?'小规模纳税人（征收率3%）':'一般纳税人（进销项抵扣）'
+    const al = acctType==='small_biz'?'小企业会计准则':'企业会计准则'
+    document.getElementById('confirm-info').innerHTML = `
+      <div>🏢 <b>公司：</b>${document.getElementById('co-name').value}</div>
+      <div>🔢 <b>税号：</b>${document.getElementById('co-taxno').value||'未填写'}</div>
+      <div>📍 <b>城市：</b>${document.getElementById('co-city').value||'未填写'}</div>
+      <div>🏛 <b>纳税人：</b>${tl}</div>
+      <div>📋 <b>准则：</b>${al}</div>
+    `
+  }
+  ;[1,2,3].forEach(i => {
+    document.getElementById('step'+i).style.display = i===n?'block':'none'
+    const d = document.getElementById('dot-'+i)
+    d.className = 'step-dot'+(i<n?' done':i===n?' active':'')
+    d.textContent = i<n?'✓':i
+  })
+  ;[1,2].forEach(i => {
+    document.getElementById('line-'+i).className = 'step-line'+(i<n?' done':'')
+  })
+  const titles = ['','创建公司档案','选择企业类型','确认信息']
+  const subs = ['','填写公司基本信息','影响增值税计算与会计准则','确认无误后点击创建']
+  document.getElementById('wiz-title').textContent = titles[n]
+  document.getElementById('wiz-sub').textContent = subs[n]
+}
+
+function selTax(t) {
+  taxType = t
+  document.getElementById('tp-small').classList.toggle('selected', t==='small')
+  document.getElementById('tp-general').classList.toggle('selected', t==='general')
+}
+function selAcct(t) {
+  acctType = t
+  document.getElementById('ac-small').classList.toggle('selected', t==='small_biz')
+  document.getElementById('ac-general').classList.toggle('selected', t==='general')
+}
+
+async function createCompany() {
+  if (!currentUser) return
+  const btn = document.getElementById('btn-create')
+  btn.disabled = true
+  btn.innerHTML = '<span class="spinner"></span>正在初始化会计科目...'
+
+  const { data: co, error } = await sb.from('companies').insert({
+    owner_id: currentUser.id,
+    name: document.getElementById('co-name').value.trim(),
+    tax_no: document.getElementById('co-taxno').value.trim() || null,
+    phone: document.getElementById('co-phone').value.trim() || null,
+    address: document.getElementById('co-city').value.trim() || null,
+    tax_payer: taxType,
+    account_type: acctType
+  }).select().single()
+
+  if (error) {
+    showAlert('setup','error','创建失败：' + error.message)
+    btn.disabled = false; btn.textContent = '确认创建 · 开始记账'; return
+  }
+
+  await sb.rpc('init_accounts', { p_company_id: co.id })
+
+  localStorage.setItem('zxs_cid', co.id)
+  localStorage.setItem('zxs_cname', co.name)
+
+  document.getElementById('success-msg').innerHTML =
+    `<b>${co.name}</b> 创建成功<br>已自动预置 80+ 个国标会计科目<br>现在可以开始上传发票，AI帮您自动记账`
+
+  showPage('success')
+}
+
+function goMain() { window.location.href = 'main.html' }
+
+init()
+</script>
+</body>
+</html>
