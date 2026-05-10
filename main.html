@@ -290,20 +290,36 @@ tbody tr:hover td{background:var(--paper);}
   </div>
   <div class="nav-sec">
     <div class="nav-sec-label">税务</div>
-    <div class="nav-item" data-s="tax-vat"><span class="nav-icon">🏛</span>增值税申报</div>
+    <div class="nav-item" data-s="tax-config"><span class="nav-icon">⚙</span>税种配置</div>
+    <div class="nav-item" data-s="tax-center"><span class="nav-icon">🏛</span>税务申报中心</div>
+    <div class="nav-item" data-s="tax-vat"><span class="nav-icon">📋</span>增值税</div>
+    <div class="nav-item" data-s="tax-surcharge"><span class="nav-icon">➕</span>附征税</div>
+    <div class="nav-item" data-s="tax-stamp"><span class="nav-icon">🖨</span>印花税</div>
     <div class="nav-item" data-s="tax-cit"><span class="nav-icon">🏢</span>企业所得税</div>
     <div class="nav-item" data-s="tax-iit"><span class="nav-icon">👤</span>个人所得税</div>
+    <div class="nav-item" data-s="tax-property"><span class="nav-icon">🏠</span>房产/土地/车船税</div>
   </div>
   <div class="nav-sec">
     <div class="nav-sec-label">人事薪酬</div>
     <div class="nav-item" data-s="employee"><span class="nav-icon">👥</span>员工档案</div>
     <div class="nav-item" data-s="payroll"><span class="nav-icon">💰</span>薪资核算</div>
+    <div class="nav-item" data-s="expense"><span class="nav-icon">🧾</span>费用报销</div>
   </div>
   <div class="nav-sec">
-    <div class="nav-sec-label">资产</div>
+    <div class="nav-sec-label">资产管理</div>
     <div class="nav-item" data-s="assets"><span class="nav-icon">🏢</span>固定资产</div>
+    <div class="nav-item" data-s="asset-dep"><span class="nav-icon">📉</span>折旧管理</div>
     <div class="nav-item" data-s="inventory"><span class="nav-icon">📦</span>存货管理</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-sec-label">出纳</div>
     <div class="nav-item" data-s="bank"><span class="nav-icon">🏦</span>银行流水</div>
+    <div class="nav-item" data-s="cashier"><span class="nav-icon">💵</span>出纳管理</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-sec-label">AI知识库</div>
+    <div class="nav-item" data-s="policy"><span class="nav-icon">📜</span>政策文档</div>
+    <div class="nav-item" data-s="rpt-template"><span class="nav-icon">📋</span>报表格式</div>
   </div>
   <div class="sidebar-footer">
     <div class="user-card">
@@ -686,8 +702,571 @@ tbody tr:hover td{background:var(--paper);}
   </div>
 </div>
 
+      <div class="card-head"><span class="card-title">预览 / 生成结果</span></div>
+      <div id="bank-result" style="max-height:460px;overflow-y:auto;">
+        <div class="empty-state" style="padding:36px;"><div class="empty-icon">🏦</div><div class="empty-title">上传流水后显示</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 税种配置 ══ -->
+<div class="screen" id="screen-tax-config">
+  <div class="page-header">
+    <div><div class="page-title">税种配置</div><div class="page-title-en">TAX CONFIGURATION</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="saveTaxConfig()">保存配置</button>
+    </div>
+  </div>
+  <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--gold);display:flex;align-items:center;gap:10px;">
+    <span style="font-size:20px;">⚙</span>
+    <div>选择企业适用的税种，系统将只显示和计算相关税务。配置后税务申报中心自动更新。</div>
+  </div>
+  <div class="grid-2" style="align-items:start;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">必选税种</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+        <div class="tax-config-item required">
+          <div class="tax-config-check">✅</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">增值税</div>
+            <div class="tax-config-desc">所有企业必须申报，月度或季度</div>
+          </div>
+          <div class="tax-config-badge">必选</div>
+        </div>
+        <div class="tax-config-item required">
+          <div class="tax-config-check">✅</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">企业所得税</div>
+            <div class="tax-config-desc">季度预缴，年度汇算清缴</div>
+          </div>
+          <div class="tax-config-badge">必选</div>
+        </div>
+        <div class="tax-config-item" id="tc-iit">
+          <div class="tax-config-check" onclick="toggleTaxItem('iit')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">个人所得税（代扣代缴）</div>
+            <div class="tax-config-desc">有雇员的企业需要代扣代缴</div>
+          </div>
+          <select class="tax-config-sel" id="tc-iit-freq"><option value="monthly">每月申报</option></select>
+        </div>
+        <div class="tax-config-item" id="tc-surcharge">
+          <div class="tax-config-check" onclick="toggleTaxItem('surcharge')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">附征税（城建税+教育费附加+地方教育附加）</div>
+            <div class="tax-config-desc">随增值税一起申报，自动计算</div>
+          </div>
+          <div style="font-size:11px;color:var(--gray2);">随增值税</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">可选税种</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+        <div class="tax-config-item" id="tc-stamp">
+          <div class="tax-config-check" onclick="toggleTaxItem('stamp')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">印花税</div>
+            <div class="tax-config-desc">签订合同时按合同类型征收</div>
+          </div>
+          <select class="tax-config-sel"><option>按次申报</option><option>年度汇总</option></select>
+        </div>
+        <div class="tax-config-item" id="tc-property">
+          <div class="tax-config-check" onclick="toggleTaxItem('property')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">房产税</div>
+            <div class="tax-config-desc">自有房产按评估价或租金计征</div>
+          </div>
+          <select class="tax-config-sel"><option>半年申报</option><option>年度申报</option></select>
+        </div>
+        <div class="tax-config-item" id="tc-land">
+          <div class="tax-config-check" onclick="toggleTaxItem('land')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">城镇土地使用税</div>
+            <div class="tax-config-desc">使用城镇土地的企业</div>
+          </div>
+          <select class="tax-config-sel"><option>半年申报</option><option>年度申报</option></select>
+        </div>
+        <div class="tax-config-item" id="tc-vehicle">
+          <div class="tax-config-check" onclick="toggleTaxItem('vehicle')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">车船税</div>
+            <div class="tax-config-desc">拥有车辆的企业，每年申报</div>
+          </div>
+          <select class="tax-config-sel"><option>年度申报</option></select>
+        </div>
+        <div class="tax-config-item" id="tc-resource">
+          <div class="tax-config-check" onclick="toggleTaxItem('resource')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">资源税</div>
+            <div class="tax-config-desc">开采自然资源的企业</div>
+          </div>
+          <select class="tax-config-sel"><option>月度申报</option></select>
+        </div>
+        <div class="tax-config-item" id="tc-env">
+          <div class="tax-config-check" onclick="toggleTaxItem('env')">☐</div>
+          <div class="tax-config-info">
+            <div class="tax-config-name">环境保护税</div>
+            <div class="tax-config-desc">排放应税污染物的企业</div>
+          </div>
+          <select class="tax-config-sel"><option>季度申报</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head"><span class="card-title">附征税参数配置</span></div>
+    <div class="card-body">
+      <div class="field-row-3">
+        <div class="field"><label>城市维护建设税税率</label>
+          <select id="tc-urban-rate">
+            <option value="0.07">7%（市区）</option>
+            <option value="0.05">5%（县城/镇）</option>
+            <option value="0.01">1%（其他）</option>
+          </select>
+        </div>
+        <div class="field"><label>教育费附加</label>
+          <input type="text" value="3%（固定）" readonly style="background:var(--paper2);cursor:not-allowed;"/>
+        </div>
+        <div class="field"><label>地方教育附加</label>
+          <input type="text" value="2%（固定）" readonly style="background:var(--paper2);cursor:not-allowed;"/>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--gray2);">附征税 = 增值税应纳税额 × (城建税率 + 3% + 2%)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 税务申报中心 ══ -->
+<div class="screen" id="screen-tax-center">
+  <div class="page-header">
+    <div><div class="page-title">税务申报中心</div><div class="page-title-en">TAX FILING CENTER</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="calcAllTax()">⚡ AI一键计算所有税种</button>
+    </div>
+  </div>
+  <div class="stats-grid" id="tax-center-stats" style="margin-bottom:20px;"></div>
+  <div class="card">
+    <div class="card-head"><span class="card-title">本期应申报税种汇总</span><span class="card-action" onclick="exportTaxSummary()">↓ 导出汇总表</span></div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>税种</th><th>申报期间</th><th>截止日期</th><th>应纳税额</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody id="tax-center-tbody"><tr><td colspan="6" style="text-align:center;padding:36px;color:var(--gray2);">点击"AI一键计算"加载所有税种数据</td></tr></tbody></table></div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head"><span class="card-title">申报日历</span></div>
+    <div class="card-body" id="tax-calendar-body">
+      <div class="tax-items" id="tax-calendar-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 附征税 ══ -->
+<div class="screen" id="screen-tax-surcharge">
+  <div class="page-header">
+    <div><div class="page-title">附征税申报</div><div class="page-title-en">SURCHARGE TAX</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <select class="period-sel" id="sur-year"></select>
+      <select class="period-sel" id="sur-month"></select>
+      <button class="btn btn-primary btn-sm" onclick="calcSurcharge()">⚡ 计算附征税</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="card-title">附征税计算表（随增值税附征）</span></div>
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr><th>税种</th><th>计税依据</th><th>税率</th><th>应纳税额</th></tr></thead>
+        <tbody>
+          <tr><td>增值税应纳税额（计税基础）</td><td class="td-green" id="sur-base">—</td><td>—</td><td>—</td></tr>
+          <tr><td>城市维护建设税</td><td id="sur-base2">—</td><td id="sur-urban-rate">7%</td><td class="td-red" id="sur-urban">—</td></tr>
+          <tr><td>教育费附加</td><td id="sur-base3">—</td><td>3%</td><td class="td-red" id="sur-edu">—</td></tr>
+          <tr><td>地方教育附加</td><td id="sur-base4">—</td><td>2%</td><td class="td-red" id="sur-local-edu">—</td></tr>
+          <tr style="font-weight:700;background:var(--paper2);"><td>附征税合计</td><td>—</td><td id="sur-total-rate">12%</td><td class="td-red" id="sur-total">—</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:14px 16px;display:flex;gap:10px;">
+        <button class="btn btn-primary btn-sm" onclick="saveSurchargeFiling()">保存申报记录</button>
+        <button class="btn btn-outline btn-sm" onclick="exportSurcharge()">↓ 导出</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 印花税 ══ -->
+<div class="screen" id="screen-tax-stamp">
+  <div class="page-header">
+    <div><div class="page-title">印花税申报</div><div class="page-title-en">STAMP DUTY</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="openStampModal()">＋ 新增合同</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-head"><span class="card-title">印花税税率表（常用）</span></div>
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead><tr><th>合同类型</th><th>税率</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>购销合同</td><td class="td-red">0.03‰</td><td>买卖、供应、预购合同</td></tr>
+          <tr><td>借款合同</td><td class="td-red">0.05‰</td><td>银行及金融机构借款</td></tr>
+          <tr><td>租赁合同</td><td class="td-red">1‰</td><td>财产租赁合同</td></tr>
+          <tr><td>技术合同</td><td class="td-red">0.03‰</td><td>技术开发、转让、咨询、服务</td></tr>
+          <tr><td>加工承揽合同</td><td class="td-red">0.05‰</td><td>加工、定做、修缮等</td></tr>
+          <tr><td>建筑安装工程合同</td><td class="td-red">0.03‰</td><td>建筑、安装工程</td></tr>
+          <tr><td>产权转移书据</td><td class="td-red">0.05‰</td><td>土地使用权、股权转让</td></tr>
+          <tr><td>营业账簿（资金账簿）</td><td class="td-red">0.025‰</td><td>年度注册资本和资本公积</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="card-title">合同台账 · 印花税计算</span><span class="card-action" onclick="calcStampTotal()">计算合计</span></div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>合同名称</th><th>合同类型</th><th>合同金额</th><th>税率</th><th>应纳印花税</th><th>签订日期</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody id="stamp-tbody"><tr><td colspan="8" style="text-align:center;padding:36px;color:var(--gray2);">暂无合同记录</td></tr></tbody></table></div>
+    <div style="padding:11px 15px;display:flex;justify-content:flex-end;gap:20px;font-size:13px;font-weight:700;border-top:1px solid var(--border2);">
+      合计应纳印花税：<span class="td-red" id="stamp-total">¥0.00</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 房产/土地/车船税 ══ -->
+<div class="screen" id="screen-tax-property">
+  <div class="page-header">
+    <div><div class="page-title">房产税 / 土地使用税 / 车船税</div><div class="page-title-en">PROPERTY & VEHICLE TAX</div><div class="title-line"></div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">房产税</span><span class="card-action" onclick="calcPropertyTax()">计算</span></div>
+      <div class="card-body">
+        <div class="field-row">
+          <div class="field"><label>计税方式</label>
+            <select id="pt-method" onchange="togglePropMethod()">
+              <option value="value">从价计征（自用）按评估价1.2%</option>
+              <option value="rent">从租计征（出租）按租金12%</option>
+            </select>
+          </div>
+          <div class="field"><label>申报期间</label>
+            <select id="pt-period"><option>上半年（6月）</option><option>下半年（12月）</option></select>
+          </div>
+        </div>
+        <div id="pt-value-fields">
+          <div class="field"><label>房产评估值（元）</label><input type="number" id="pt-value" placeholder="1000000" oninput="calcPropertyTax()"/></div>
+          <div class="field"><label>扣除比例</label><select id="pt-deduct" onchange="calcPropertyTax()"><option value="0.1">10%（标准）</option><option value="0.2">20%（部分地区）</option><option value="0.3">30%（部分地区）</option></select></div>
+        </div>
+        <div id="pt-rent-fields" style="display:none;">
+          <div class="field"><label>年租金收入（元）</label><input type="number" id="pt-rent" placeholder="120000" oninput="calcPropertyTax()"/></div>
+        </div>
+        <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:7px;padding:11px 14px;font-size:13px;">
+          应纳房产税：<b class="td-red" id="pt-result">—</b> 元/年
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">城镇土地使用税</span><span class="card-action" onclick="calcLandTax()">计算</span></div>
+      <div class="card-body">
+        <div class="field"><label>土地面积（平方米）</label><input type="number" id="lt-area" placeholder="500" oninput="calcLandTax()"/></div>
+        <div class="field"><label>适用税额（元/平方米/年）</label>
+          <select id="lt-rate" onchange="calcLandTax()">
+            <option value="30">大城市：10-30元</option>
+            <option value="18">中等城市：8-18元</option>
+            <option value="9">小城市：4-9元</option>
+            <option value="4">县城/建制镇：1.5-4元</option>
+          </select>
+        </div>
+        <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:7px;padding:11px 14px;font-size:13px;">
+          应纳土地使用税：<b class="td-red" id="lt-result">—</b> 元/年
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="card-title">车船税</span><span class="card-action" onclick="openVehicleModal()">＋ 添加车辆</span></div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>车牌号</th><th>车辆类型</th><th>排量/吨位</th><th>年税额</th><th>已缴</th><th>操作</th></tr></thead>
+    <tbody id="vehicle-tbody"><tr><td colspan="6" style="text-align:center;padding:28px;color:var(--gray2);">暂无车辆记录</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<!-- ══ 企所税年度汇算 ══ 已有，在screen-tax-cit下面加年度汇算tab -->
+
+<!-- ══ 折旧管理 ══ -->
+<div class="screen" id="screen-asset-dep">
+  <div class="page-header">
+    <div><div class="page-title">折旧管理</div><div class="page-title-en">DEPRECIATION MANAGEMENT</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <select class="period-sel" id="dep-year"></select>
+      <select class="period-sel" id="dep-month"></select>
+      <button class="btn btn-primary btn-sm" onclick="runDepreciation()">⚡ 计提本月折旧</button>
+      <button class="btn btn-outline btn-sm" onclick="exportDepReport()">↓ 折旧报表</button>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card c-red"><div class="stat-label">资产总原值</div><div class="stat-value" id="dep-total-value">—<span class="unit">元</span></div></div>
+    <div class="stat-card c-gold"><div class="stat-label">累计折旧</div><div class="stat-value" id="dep-total-acc">—<span class="unit">元</span></div></div>
+    <div class="stat-card c-green"><div class="stat-label">资产净值</div><div class="stat-value" id="dep-total-net">—<span class="unit">元</span></div></div>
+    <div class="stat-card c-blue"><div class="stat-label">本月折旧额</div><div class="stat-value" id="dep-monthly">—<span class="unit">元</span></div></div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showDepTab('schedule',this)">折旧计划表</button>
+    <button class="tab-btn" onclick="showDepTab('history',this)">折旧历史</button>
+    <button class="tab-btn" onclick="showDepTab('method',this)">折旧方法对比</button>
+  </div>
+  <div id="dep-schedule" class="dep-panel">
+    <div class="card"><div style="overflow-x:auto;"><table>
+      <thead><tr><th>资产名称</th><th>折旧方法</th><th>原值</th><th>残值</th><th>已提月数</th><th>剩余月数</th><th>本月折旧</th><th>累计折旧</th><th>净值</th></tr></thead>
+      <tbody id="dep-schedule-tbody"><tr><td colspan="9" style="text-align:center;padding:36px;color:var(--gray2);">加载中...</td></tr></tbody>
+    </table></div></div>
+  </div>
+  <div id="dep-history" class="dep-panel" style="display:none;">
+    <div class="card"><div style="overflow-x:auto;"><table>
+      <thead><tr><th>期间</th><th>凭证号</th><th>折旧金额</th><th>涉及资产数</th><th>状态</th></tr></thead>
+      <tbody id="dep-history-tbody"><tr><td colspan="5" style="text-align:center;padding:36px;color:var(--gray2);">暂无折旧历史</td></tr></tbody>
+    </table></div></div>
+  </div>
+  <div id="dep-method" class="dep-panel" style="display:none;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">折旧方法说明</span></div>
+      <div class="card-body" style="font-size:13px;line-height:2;">
+        <div style="margin-bottom:16px;"><b>1. 直线法（年限平均法）</b> — 每月折旧额 = (原值 - 残值) ÷ 使用月数<br><span style="color:var(--gray2);">适合：大多数固定资产，计算简单，税法首选</span></div>
+        <div style="margin-bottom:16px;"><b>2. 双倍余额递减法</b> — 年折旧率 = 2 ÷ 使用年限，按净值计算<br><span style="color:var(--gray2);">适合：技术进步快的资产（电子设备），前期多提</span></div>
+        <div style="margin-bottom:16px;"><b>3. 年数总和法</b> — 折旧率 = 剩余年数 ÷ 年数总和<br><span style="color:var(--gray2);">适合：更新较快的资产，介于直线法和双倍法之间</span></div>
+        <div><b>4. 工作量法</b> — 按实际工作量比例计提<br><span style="color:var(--gray2);">适合：运输工具、采矿设备等按使用量磨损的资产</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 费用报销 ══ -->
+<div class="screen" id="screen-expense">
+  <div class="page-header">
+    <div><div class="page-title">费用报销</div><div class="page-title-en">EXPENSE REPORTS</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" onclick="exportExpenses()">↓ 导出</button>
+      <button class="btn btn-primary btn-sm" onclick="openExpenseModal()">＋ 新建报销单</button>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card c-gold"><div class="stat-label">本月报销总额</div><div class="stat-value" id="exp-total">—<span class="unit">元</span></div></div>
+    <div class="stat-card c-red"><div class="stat-label">待审核</div><div class="stat-value" id="exp-pending">0<span class="unit">单</span></div></div>
+    <div class="stat-card c-green"><div class="stat-label">已审核</div><div class="stat-value" id="exp-approved">0<span class="unit">单</span></div></div>
+    <div class="stat-card c-blue"><div class="stat-label">已入账</div><div class="stat-value" id="exp-posted">0<span class="unit">单</span></div></div>
+  </div>
+  <div class="card"><div style="overflow-x:auto;"><table>
+    <thead><tr><th>单号</th><th>报销人</th><th>报销事由</th><th>金额</th><th>提交日期</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody id="expense-tbody"><tr><td colspan="7" style="text-align:center;padding:36px;color:var(--gray2);">暂无报销记录</td></tr></tbody>
+  </table></div></div>
+</div>
+
+<!-- ══ 出纳管理 ══ -->
+<div class="screen" id="screen-cashier">
+  <div class="page-header">
+    <div><div class="page-title">出纳管理</div><div class="page-title-en">CASHIER MANAGEMENT</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <select class="period-sel" id="cash-year"></select>
+      <select class="period-sel" id="cash-month"></select>
+      <button class="btn btn-primary btn-sm" onclick="genBankReconcile()">生成银行余额调节表</button>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px;align-items:start;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">现金日记账</span><span class="card-action" onclick="openCashEntryModal()">＋ 记录</span></div>
+      <div style="max-height:300px;overflow-y:auto;"><table>
+        <thead><tr><th>日期</th><th>摘要</th><th>收入</th><th>支出</th><th>余额</th></tr></thead>
+        <tbody id="cash-tbody"><tr><td colspan="5" style="text-align:center;padding:28px;color:var(--gray2);">暂无现金记录</td></tr></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">银行余额调节表</span></div>
+      <div class="card-body" id="reconcile-body">
+        <div style="font-size:13px;color:var(--gray2);text-align:center;padding:20px;">
+          选择期间后点击生成余额调节表
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span class="card-title">银行存款余额表</span></div>
+    <div class="card-body" style="padding:0;"><table>
+      <thead><tr><th>银行账户</th><th>账面余额</th><th>未达账项（收入）</th><th>未达账项（支出）</th><th>调节后余额</th></tr></thead>
+      <tbody id="bank-bal-tbody"><tr><td colspan="5" style="text-align:center;padding:28px;color:var(--gray2);">点击生成后显示</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ══ 政策文档 ══ -->
+<div class="screen" id="screen-policy">
+  <div class="page-header">
+    <div><div class="page-title">政策文档库</div><div class="page-title-en">POLICY KNOWLEDGE BASE</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" onclick="openPolicyModal()">＋ 添加政策</button>
+    </div>
+  </div>
+  <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--gold);display:flex;align-items:center;gap:10px;">
+    <span style="font-size:20px;">💡</span>
+    <div>上传最新政策文件后，AI助手将自动学习并按新规回答问题和执行操作。支持手动粘贴文本或上传PDF/TXT文件。</div>
+  </div>
+  <div class="grid-2" style="align-items:start;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">已上传政策</span><span style="font-size:11px;color:var(--gray2);">AI对话时自动引用激活的政策</span></div>
+      <div id="policy-list" style="min-height:200px;">
+        <div class="empty-state" style="padding:36px;"><div class="empty-icon">📜</div><div class="empty-title">暂无政策文档</div><div class="empty-sub">添加最新税法、会计准则等政策</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">常用政策模板</span></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="policy-template-item" onclick="addTemplatePolicy('vat2024')">
+            <div style="font-weight:700;font-size:13px;margin-bottom:3px;">📋 增值税税率表（2024）</div>
+            <div style="font-size:12px;color:var(--gray2);">标准税率13%、9%、6%，小规模3%/5%</div>
+          </div>
+          <div class="policy-template-item" onclick="addTemplatePolicy('iit2024')">
+            <div style="font-weight:700;font-size:13px;margin-bottom:3px;">📋 个税专项扣除标准（2024）</div>
+            <div style="font-size:12px;color:var(--gray2);">子女教育、赡养老人、住房等扣除标准</div>
+          </div>
+          <div class="policy-template-item" onclick="addTemplatePolicy('social2024')">
+            <div style="font-weight:700;font-size:13px;margin-bottom:3px;">📋 社保缴费比例（2024）</div>
+            <div style="font-size:12px;color:var(--gray2);">养老、医疗、失业、工伤、生育比例</div>
+          </div>
+          <div class="policy-template-item" onclick="addTemplatePolicy('sme2024')">
+            <div style="font-weight:700;font-size:13px;margin-bottom:3px;">📋 小微企业税收优惠（2024）</div>
+            <div style="font-size:12px;color:var(--gray2);">所得税5%优惠、增值税免税标准</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 报表格式 ══ -->
+<div class="screen" id="screen-rpt-template">
+  <div class="page-header">
+    <div><div class="page-title">报表格式学习</div><div class="page-title-en">REPORT FORMAT TEMPLATES</div><div class="title-line"></div></div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" onclick="loadStdTemplates()">加载国标格式</button>
+      <button class="btn btn-primary btn-sm" onclick="openTemplateModal()">＋ 上传自定义格式</button>
+    </div>
+  </div>
+  <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--gold);display:flex;align-items:center;gap:10px;">
+    <span style="font-size:20px;">📋</span>
+    <div>上传您所在地区或行业要求的报表格式，AI将按该格式生成报表。支持财政部标准格式、行业特殊格式、地方税务局要求格式。</div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showRptTplTab('bs',this)">资产负债表</button>
+    <button class="tab-btn" onclick="showRptTplTab('is',this)">利润表</button>
+    <button class="tab-btn" onclick="showRptTplTab('cf',this)">现金流量表</button>
+    <button class="tab-btn" onclick="showRptTplTab('eq',this)">所有者权益变动表</button>
+    <button class="tab-btn" onclick="showRptTplTab('notes',this)">报表附注</button>
+  </div>
+  <div id="tpl-bs" class="tpl-panel">
+    <div class="grid-2" style="align-items:start;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">当前使用格式</span></div>
+        <div id="tpl-bs-current" class="card-body" style="font-size:13px;color:var(--gray2);">使用系统默认格式（财政部小企业会计准则）</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">格式说明</span></div>
+        <div class="card-body" style="font-size:13px;line-height:1.8;color:var(--ink);">
+          <div style="margin-bottom:8px;"><b>财政部标准格式：</b>按资产=负债+所有者权益列示，流动资产在前</div>
+          <div style="margin-bottom:8px;"><b>行业格式差异：</b>金融业、房地产、事业单位格式不同</div>
+          <div><b>上传说明：</b>可上传Excel格式模板，AI自动识别行项目和科目映射</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-head"><span class="card-title">资产负债表标准行项目</span><span class="card-action" onclick="applyStdTemplate('bs')">应用国标格式</span></div>
+      <div style="overflow-x:auto;" id="bs-items-table">
+        <table><thead><tr><th>行次</th><th>项目名称</th><th>对应科目</th><th>计算方式</th></tr></thead>
+        <tbody id="bs-items-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div id="tpl-is" class="tpl-panel" style="display:none;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">利润表标准行项目</span><span class="card-action" onclick="applyStdTemplate('is')">应用国标格式</span></div>
+      <div style="overflow-x:auto;"><table><thead><tr><th>行次</th><th>项目名称</th><th>对应科目</th><th>计算方式</th></tr></thead>
+      <tbody id="is-items-tbody"></tbody></table></div>
+    </div>
+  </div>
+  <div id="tpl-cf" class="tpl-panel" style="display:none;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">现金流量表标准行项目</span><span class="card-action" onclick="applyStdTemplate('cf')">应用国标格式</span></div>
+      <div style="overflow-x:auto;"><table><thead><tr><th>行次</th><th>项目名称</th><th>说明</th></tr></thead>
+      <tbody id="cf-items-tbody"></tbody></table></div>
+    </div>
+  </div>
+  <div id="tpl-eq" class="tpl-panel" style="display:none;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">所有者权益变动表</span></div>
+      <div style="overflow-x:auto;"><table><thead><tr><th>项目</th><th>实收资本</th><th>资本公积</th><th>盈余公积</th><th>未分配利润</th><th>合计</th></tr></thead>
+      <tbody id="eq-tbody"></tbody></table></div>
+    </div>
+  </div>
+  <div id="tpl-notes" class="tpl-panel" style="display:none;">
+    <div class="card">
+      <div class="card-head"><span class="card-title">财务报表附注</span><span class="card-action" onclick="genNotes()">⚡ AI生成附注</span></div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--gray2);letter-spacing:1px;margin-bottom:14px;">附注是财务报表不可分割的组成部分，需披露重要会计政策和估计</div>
+        <div id="notes-content">
+          <div style="margin-bottom:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--ink);">一、企业基本情况</div>
+            <textarea class="notes-field" id="note-basic" placeholder="填写企业名称、注册地、经营范围、注册资本等基本信息..."></textarea>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--ink);">二、主要会计政策和会计估计</div>
+            <textarea class="notes-field" id="note-policy" placeholder="填写会计年度、记账本位币、会计核算基础、收入确认原则、固定资产折旧方法等..."></textarea>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--ink);">三、重要会计科目说明</div>
+            <textarea class="notes-field" id="note-accounts" placeholder="对货币资金、应收账款、存货、固定资产等重要科目进行说明..."></textarea>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--ink);">四、期后事项</div>
+            <textarea class="notes-field" id="note-events" placeholder="填写资产负债表日后至财务报告批准报出日之间发生的重要事项..."></textarea>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:6px;">
+            <button class="btn btn-primary btn-sm" onclick="genNotes()">⚡ AI自动生成附注内容</button>
+            <button class="btn btn-outline btn-sm" onclick="saveNotes()">保存附注</button>
+            <button class="btn btn-outline btn-sm" onclick="exportNotes()">↓ 导出Word</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /content-area -->
 </div><!-- /main -->
+
+<!-- AI CHAT PANEL -->
+<div class="ai-chat-panel" id="ai-panel">
+  <div class="ai-chat-toggle" onclick="toggleAIPanel()" title="收起/展开AI助手">🤖</div>
+  <div class="ai-chat-inner">
+    <div class="ai-chat-head">
+      <div class="ai-chat-name">账先生 AI 助手</div>
+      <div class="ai-chat-desc">精通会计准则 · 税法 · 劳动法</div>
+    </div>
+    <div class="ai-messages" id="ai-msgs">
+      <div class="ai-msg ai">
+        <div class="ai-msg-from">账先生 AI</div>
+        <div class="ai-msg-bubble">您好！我精通中国企业会计准则、增值税法、个税法及劳动法规。有任何会计问题请直接问我！</div>
+      </div>
+    </div>
+    <div class="ai-quick-btns">
+      <span class="ai-quick-btn" onclick="askAI('帮我核算本月工资')">核算工资</span>
+      <span class="ai-quick-btn" onclick="askAI('计算本月所有税种')">算所有税</span>
+      <span class="ai-quick-btn" onclick="askAI('计算附征税')">算附征税</span>
+      <span class="ai-quick-btn" onclick="askAI('生成本月财务报表')">生成报表</span>
+      <span class="ai-quick-btn" onclick="askAI('计提本月折旧')">计提折旧</span>
+      <span class="ai-quick-btn" onclick="askAI('新建费用报销单')">费用报销</span>
+      <span class="ai-quick-btn" onclick="askAI('生成银行余额调节表')">银行对账</span>
+      <span class="ai-quick-btn" onclick="askAI('我要上传发票')">上传发票</span>
+      <span class="ai-quick-btn" onclick="askAI('新建一张记账凭证')">新建凭证</span>
+      <span class="ai-quick-btn" onclick="askAI('跳转到税种配置页面')">税种配置</span>
+    </div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="ai-input" placeholder="输入会计问题..." onkeydown="aiHandleKey(event)" rows="1"></textarea>
+      <button class="ai-send-btn" onclick="sendAIMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app-body -->
 
 <!-- ══ MODAL: 新建凭证 ══ -->
@@ -759,10 +1338,233 @@ tbody tr:hover td{background:var(--paper);}
   </div>
 </div>
 
+<!-- ══ MODAL: 印花税合同 ══ -->
+<div class="modal-overlay" id="modal-stamp">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">新增合同 · 印花税计算</span><span class="modal-close" onclick="closeModal('stamp')">×</span></div>
+    <div class="modal-body">
+      <div class="field"><label>合同名称</label><input type="text" id="st-name" placeholder="采购合同-XX供应商-2025"/></div>
+      <div class="field-row">
+        <div class="field"><label>合同类型</label>
+          <select id="st-type" onchange="calcStampTax()">
+            <option value="0.0003">购销合同 0.03‰</option>
+            <option value="0.0005">借款合同 0.05‰</option>
+            <option value="0.001">租赁合同 1‰</option>
+            <option value="0.0003">技术合同 0.03‰</option>
+            <option value="0.0005">加工承揽合同 0.05‰</option>
+            <option value="0.0003">建筑安装合同 0.03‰</option>
+            <option value="0.0005">产权转移书据 0.05‰</option>
+            <option value="0.00025">营业账簿 0.025‰</option>
+          </select>
+        </div>
+        <div class="field"><label>签订日期</label><input type="date" id="st-date"/></div>
+      </div>
+      <div class="field"><label>合同金额（元）</label><input type="number" id="st-amount" placeholder="0" oninput="calcStampTax()"/></div>
+      <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:7px;padding:11px 14px;font-size:13px;margin-bottom:4px;">
+        应纳印花税：<b class="td-red" id="st-tax">¥0.00</b>
+      </div>
+      <div id="alert-stamp" class="alert"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('stamp')">取消</button><button class="btn btn-primary" onclick="saveStampContract()">保存</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: 费用报销 ══ -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal modal-lg">
+    <div class="modal-head"><span class="modal-title">新建报销单</span><span class="modal-close" onclick="closeModal('expense')">×</span></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>报销人</label>
+          <select id="exp-employee"><option value="">请选择员工</option></select>
+        </div>
+        <div class="field"><label>报销日期</label><input type="date" id="exp-date"/></div>
+      </div>
+      <div class="field"><label>报销事由</label><input type="text" id="exp-title" placeholder="2025年4月差旅费报销"/></div>
+      <div style="font-size:11px;color:var(--gray2);letter-spacing:2px;margin-bottom:9px;">报销明细</div>
+      <div id="exp-items-wrap">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;">
+          <div style="display:contents;" id="exp-items-head">
+            <div style="padding:7px 11px;font-size:11px;font-weight:600;color:var(--gray2);background:var(--paper2);border-bottom:1px solid var(--border2);">费用说明</div>
+            <div style="padding:7px 11px;font-size:11px;font-weight:600;color:var(--gray2);background:var(--paper2);border-bottom:1px solid var(--border2);">费用类别</div>
+            <div style="padding:7px 11px;font-size:11px;font-weight:600;color:var(--gray2);background:var(--paper2);border-bottom:1px solid var(--border2);">金额（元）</div>
+            <div style="background:var(--paper2);border-bottom:1px solid var(--border2);"></div>
+          </div>
+          <div id="exp-items-rows"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="addExpItem()" style="margin-top:8px;">＋ 添加明细</button>
+      </div>
+      <div style="display:flex;justify-content:flex-end;padding:10px 0;font-size:13px;font-weight:700;">
+        合计：<span class="td-red" id="exp-total-val" style="margin-left:8px;">¥0.00</span>
+      </div>
+      <div id="alert-expense" class="alert"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('expense')">取消</button><button class="btn btn-primary" onclick="saveExpense()">提交报销</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: 车辆 ══ -->
+<div class="modal-overlay" id="modal-vehicle">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">添加车辆</span><span class="modal-close" onclick="closeModal('vehicle')">×</span></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>车牌号</label><input type="text" id="vh-plate" placeholder="京A12345"/></div>
+        <div class="field"><label>车辆类型</label>
+          <select id="vh-type" onchange="calcVehicleTax()">
+            <option value="passenger_1">乘用车 1.0L以下 60元/年</option>
+            <option value="passenger_2">乘用车 1.0-1.6L 300元/年</option>
+            <option value="passenger_3">乘用车 1.6-2.0L 360元/年</option>
+            <option value="passenger_4">乘用车 2.0-2.5L 660元/年</option>
+            <option value="passenger_5">乘用车 2.5-3.0L 1200元/年</option>
+            <option value="passenger_6">乘用车 3.0-4.0L 2400元/年</option>
+            <option value="passenger_7">乘用车 4.0L以上 3600元/年</option>
+            <option value="truck">货车 按整备质量</option>
+            <option value="bus">客车 按座位</option>
+          </select>
+        </div>
+      </div>
+      <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:7px;padding:11px 14px;font-size:13px;">
+        年车船税：<b class="td-red" id="vh-tax">—</b> 元
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('vehicle')">取消</button><button class="btn btn-primary" onclick="saveVehicle()">保存</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-policy">
+  <div class="modal modal-lg">
+    <div class="modal-head"><span class="modal-title">添加政策文档</span><span class="modal-close" onclick="closeModal('policy')">×</span></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>政策名称 *</label><input type="text" id="p-title" placeholder="例：2025年增值税税率调整通知"/></div>
+        <div class="field"><label>分类</label><select id="p-cat"><option value="vat">增值税</option><option value="cit">企业所得税</option><option value="iit">个人所得税</option><option value="social">社保公积金</option><option value="accounting">会计准则</option><option value="invoice">发票管理</option><option value="other">其他</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>生效日期</label><input type="date" id="p-date"/></div>
+        <div class="field"><label>来源</label><input type="text" id="p-source" placeholder="财政部/国家税务总局/地方税务局"/></div>
+      </div>
+      <div class="field">
+        <label>政策内容 *（粘贴或输入关键条款，AI将据此回答问题并调整操作）</label>
+        <textarea id="p-content" class="notes-field" style="min-height:200px;" placeholder="粘贴政策原文或关键条款...
+
+例：
+1. 自2025年X月X日起，增值税小规模纳税人适用3%征收率的，减按1%征收率征收。
+2. 小微企业年应纳税所得额不超过300万元的部分，减按25%计入应纳税所得额，按20%税率缴纳。"></textarea>
+      </div>
+      <div style="background:var(--gold-soft);border:1px solid #f0d580;border-radius:7px;padding:10px 13px;font-size:12px;color:var(--gold);">💡 保存后AI将在每次对话中自动引用此政策，确保回答符合最新规定</div>
+      <div id="alert-policy" class="alert" style="margin-top:11px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('policy')">取消</button>
+      <button class="btn btn-primary" onclick="savePolicy()">保存并激活</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: 上传报表格式 ══ -->
+<div class="modal-overlay" id="modal-template">
+  <div class="modal modal-lg">
+    <div class="modal-head"><span class="modal-title">上传自定义报表格式</span><span class="modal-close" onclick="closeModal('template')">×</span></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>格式名称</label><input type="text" id="tpl-title" placeholder="例：某地税务局2025年资产负债表格式"/></div>
+        <div class="field"><label>报表类型</label><select id="tpl-type"><option value="bs">资产负债表</option><option value="is">利润表</option><option value="cf">现金流量表</option><option value="eq">所有者权益变动表</option></select></div>
+      </div>
+      <div class="field">
+        <label>上传Excel格式模板（AI自动识别行项目和科目映射）</label>
+        <div class="upload-zone" style="padding:24px;" id="tpl-upload-zone">
+          <input type="file" id="tpl-file" accept=".xlsx,.xls,.csv" onchange="handleTemplateFile(event)"/>
+          <div style="font-size:24px;margin-bottom:8px;">📊</div>
+          <div style="font-size:13px;font-weight:700;">点击上传报表格式Excel</div>
+          <div style="font-size:12px;color:var(--gray2);margin-top:4px;">AI将识别行项目并映射到会计科目</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>或者手动描述格式要求</label>
+        <textarea id="tpl-desc" class="notes-field" placeholder="描述报表格式要求...&#10;例如：资产负债表按流动性排列，货币资金包含银行存款和现金，应收账款扣除坏账准备后列示"></textarea>
+      </div>
+      <div id="tpl-preview" style="display:none;margin-top:12px;">
+        <div style="font-size:11px;color:var(--gray2);letter-spacing:2px;margin-bottom:8px;">AI识别结果预览</div>
+        <div id="tpl-preview-content" style="background:var(--paper);border:1px solid var(--border2);border-radius:7px;padding:12px;font-size:13px;max-height:180px;overflow-y:auto;"></div>
+      </div>
+      <div id="alert-template" class="alert" style="margin-top:11px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('template')">取消</button>
+      <button class="btn btn-primary" onclick="saveTemplate()">保存格式</button>
+    </div>
+  </div>
+</div>
+
 <style>
 .quick-btn-card{border:1.5px solid var(--border2);border-radius:10px;padding:17px;text-align:center;cursor:pointer;transition:all .2s;}
 .quick-btn-card:hover{border-color:var(--gold2);background:var(--gold-soft);transform:translateY(-2px);box-shadow:var(--shadow);}
 .rpt-panel table{width:100%;}
+.tpl-panel table{width:100%;}
+
+/* POLICY */
+.policy-item{display:flex;align-items:flex-start;gap:12px;padding:13px 17px;border-bottom:1px solid var(--border2);transition:background .15s;}
+.policy-item:hover{background:var(--paper);}
+.policy-item:last-child{border-bottom:none;}
+.policy-dot{width:8px;height:8px;border-radius:50%;background:var(--green2);flex-shrink:0;margin-top:5px;}
+.policy-dot.off{background:var(--gray2);}
+.policy-info{flex:1;}
+.policy-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.policy-meta{font-size:11px;color:var(--gray2);letter-spacing:.5px;}
+.policy-template-item{border:1.5px solid var(--border2);border-radius:9px;padding:13px 15px;cursor:pointer;transition:all .2s;}
+.policy-template-item:hover{border-color:var(--gold2);background:var(--gold-soft);}
+.notes-field{width:100%;min-height:90px;padding:10px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--ink);background:var(--paper);outline:none;resize:vertical;line-height:1.7;}
+.notes-field:focus{border-color:var(--gold2);background:#fff;}
+
+/* TAX CONFIG */
+.tax-config-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid var(--border2);border-radius:9px;transition:all .2s;}
+.tax-config-item:hover{border-color:var(--gold2);background:var(--gold-soft);}
+.tax-config-item.required{background:var(--green-soft);border-color:#b8e0c8;}
+.tax-config-item.active{border-color:var(--red);background:var(--red-soft);}
+.tax-config-check{font-size:18px;cursor:pointer;flex-shrink:0;user-select:none;}
+.tax-config-info{flex:1;}
+.tax-config-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.tax-config-desc{font-size:11px;color:var(--gray2);}
+.tax-config-badge{background:var(--green2);color:#fff;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:1px;flex-shrink:0;}
+.tax-config-sel{padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;font-family:inherit;background:var(--paper);flex-shrink:0;}
+
+/* DEP PANELS */
+.dep-panel table{width:100%;}
+
+/* EXPENSE */
+.expense-item{padding:10px 12px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;}
+.expense-item:last-child{border-bottom:none;}</style>
+
+/* AI CHAT PANEL */
+.ai-chat-panel{width:300px;background:var(--ink2);display:flex;flex-direction:column;flex-shrink:0;border-left:1px solid #222;transition:width .25s ease;}
+.ai-chat-panel.collapsed{width:44px;}
+.ai-chat-toggle{height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#a09080;font-size:18px;border-bottom:1px solid #222;flex-shrink:0;transition:background .15s;}
+.ai-chat-toggle:hover{background:rgba(255,255,255,.05);}
+.ai-chat-inner{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;}
+.ai-chat-panel.collapsed .ai-chat-inner{display:none;}
+.ai-chat-head{padding:12px 14px;border-bottom:1px solid #222;flex-shrink:0;}
+.ai-chat-name{font-size:13px;font-weight:700;color:#e8d9b8;letter-spacing:1px;margin-bottom:2px;}
+.ai-chat-desc{font-size:10px;color:#5a5040;letter-spacing:1px;}
+.ai-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.ai-msg{display:flex;flex-direction:column;gap:3px;}
+.ai-msg-from{font-size:10px;letter-spacing:1px;color:#5a5040;}
+.ai-msg-bubble{border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.6;word-break:break-all;}
+.ai-msg.ai .ai-msg-bubble{background:#2a2010;color:#e0d5c0;border:1px solid #3a3020;border-top-left-radius:2px;}
+.ai-msg.user{align-items:flex-end;}
+.ai-msg.user .ai-msg-bubble{background:var(--gold);color:var(--ink);border-top-right-radius:2px;font-size:12px;}
+.ai-quick-btns{padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px;border-top:1px solid #222;}
+.ai-quick-btn{background:#2a2010;border:1px solid #3a3020;color:#b8a88a;font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.5px;}
+.ai-quick-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+.ai-input-row{padding:10px;border-top:1px solid #222;display:flex;gap:6px;flex-shrink:0;}
+.ai-input{flex:1;background:#2a2010;border:1px solid #3a3020;border-radius:6px;padding:8px 10px;color:var(--paper);font-size:12px;font-family:inherit;outline:none;resize:none;line-height:1.5;min-height:36px;max-height:80px;}
+.ai-input:focus{border-color:var(--gold);}
+.ai-send-btn{width:34px;height:34px;background:var(--red);border:none;border-radius:6px;color:#fff;font-size:14px;cursor:pointer;transition:background .15s;flex-shrink:0;align-self:flex-end;}
+.ai-send-btn:hover{background:var(--red2);}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:3px 0;}
+.ai-typing span{width:5px;height:5px;background:var(--gold);border-radius:50%;animation:blink 1.4s infinite;}
+.ai-typing span:nth-child(2){animation-delay:.2s;}
+.ai-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
 </style>
 
 <script>
@@ -789,6 +1591,8 @@ async function init(){
   initPeriodSelectors()
   setupNav()
   loadDashboard()
+  await loadPolicies()
+  await loadTaxConfig() // 加载税种配置
   $('v-date').value=today()
   $('inv-date').value=today()
   $('e-entry').value=today()
@@ -843,6 +1647,14 @@ function showScreen(id){
   if(id==='assets')loadAssets()
   if(id==='opening')loadOpening()
   if(id==='closing')loadClosingCheck()
+  if(id==='policy')loadPolicies()
+  if(id==='rpt-template')loadStdTemplates()
+  if(id==='tax-config')loadTaxConfig()
+  if(id==='tax-center')loadTaxCenter()
+  if(id==='tax-surcharge'){const y=$('sur-year');const m=$('sur-month');if(y&&m){y.value=new Date().getFullYear();m.value=new Date().getMonth()+1}}
+  if(id==='asset-dep')loadDepScreen()
+  if(id==='expense')loadExpenses()
+  if(id==='cashier'){const y=$('cash-year');const m=$('cash-month');if(y&&m){y.value=new Date().getFullYear();m.value=new Date().getMonth()+1}}
 }
 
 async function loadAccts(){
@@ -895,7 +1707,7 @@ async function recognizeInvoice(file){
   try{
     const b64=await toB64(file)
     const prompt=`请识别这张票据/发票，提取信息，只返回JSON：{"invoice_type":"增值税专用发票/增值税普通发票/电子发票/收据","direction":"in/out","party_name":"对方名称","invoice_date":"YYYY-MM-DD","amount":不含税金额数字,"tax_rate":税率小数,"tax_amount":税额数字,"total_amount":含税总额,"summary":"业务摘要","confidence":置信度0-1}`
-    const resp=await fetch(AI_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'qwen-vl-max',messages:[{role:'user',content:[{type:'image_url',image_url:{url:`data:${file.type};base64,${b64}`}},{type:'text',text:prompt}]}]})})
+    const resp=await fetch(AI_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'auto',messages:[{role:'user',content:[{type:'image_url',image_url:{url:`data:${file.type};base64,${b64}`}},{type:'text',text:prompt}]}]})})
     const data=await resp.json()
     const text=data.choices?.[0]?.message?.content||''
     const clean=text.replace(/```json|```/g,'').trim()
@@ -1525,6 +2337,1092 @@ function closeModal(n){$('modal-'+n).classList.remove('show')}
 function modalAlert(n,t,msg){const el=$('alert-'+n);if(el){el.className=`alert alert-${t} show`;el.textContent=msg}}
 async function doLogout(){await sb.auth.signOut();localStorage.removeItem('zxs_cid');localStorage.removeItem('zxs_cname');window.location.href='index.html'}
 function openInvModal(){alert('存货管理功能开发中')}
+
+// ══ 税种配置 ══
+let taxConfig={}
+let enabledTaxes=new Set(['vat','cit'])
+
+async function loadTaxConfig(){
+  if(!CO)return
+  const{data}=await sb.from('company_tax_config').select('*').eq('company_id',CO.id)
+  taxConfig={}
+  ;(data||[]).forEach(r=>{
+    taxConfig[r.tax_type]=r
+    if(r.is_enabled)enabledTaxes.add(r.tax_type)
+  })
+  // 更新UI
+  ;['iit','surcharge','stamp','property','land','vehicle','resource','env'].forEach(t=>{
+    const item=document.getElementById('tc-'+t)
+    const check=item?.querySelector('.tax-config-check')
+    if(enabledTaxes.has(t)){
+      item?.classList.add('active')
+      if(check)check.textContent='✅'
+    }
+  })
+}
+
+function toggleTaxItem(type){
+  const item=document.getElementById('tc-'+type)
+  const check=item?.querySelector('.tax-config-check')
+  if(enabledTaxes.has(type)){
+    enabledTaxes.delete(type)
+    item?.classList.remove('active')
+    if(check)check.textContent='☐'
+  }else{
+    enabledTaxes.add(type)
+    item?.classList.add('active')
+    if(check)check.textContent='✅'
+  }
+}
+
+async function saveTaxConfig(){
+  if(!CO)return
+  const types=['iit','surcharge','stamp','property','land','vehicle','resource','env']
+  const urbanRate=parseFloat(document.getElementById('tc-urban-rate')?.value)||0.07
+  for(const t of types){
+    await sb.from('company_tax_config').upsert({
+      company_id:CO.id,tax_type:t,
+      is_enabled:enabledTaxes.has(t),
+      config:{urban_rate:urbanRate}
+    },{onConflict:'company_id,tax_type'})
+  }
+  alert('✅ 税种配置已保存，税务申报中心将自动更新')
+  loadTaxCenter()
+}
+
+// ══ 税务申报中心 ══
+async function calcAllTax(){
+  if(!CO)return
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1
+  // 先算增值税
+  await calcVAT()
+  const vatPayable=parseFloat(document.getElementById('vat-payable')?.textContent?.replace(/[¥,]/g,'')||'0')
+  // 算附征税
+  if(enabledTaxes.has('surcharge'))await calcSurchargeFromVAT(vatPayable)
+  // 算企所税
+  await calcCIT()
+  // 更新中心
+  loadTaxCenter()
+}
+
+async function loadTaxCenter(){
+  if(!CO)return
+  await loadTaxConfig()
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1
+  const vatPayable=parseFloat(document.getElementById('vat-payable')?.textContent?.replace(/[¥,]/g,'')||'0')
+  const urbanRate=taxConfig['surcharge']?.config?.urban_rate||0.07
+  const surcharge=vatPayable*(urbanRate+0.03+0.02)
+
+  const rows=[]
+  rows.push({name:'增值税',period:`${y}年${m}月`,due:`${y}-${String(m+1).padStart(2,'0')}-15`,amount:vatPayable,status:'pending',screen:'tax-vat'})
+  if(enabledTaxes.has('surcharge'))rows.push({name:'城建税+教育费附加',period:`${y}年${m}月`,due:`${y}-${String(m+1).padStart(2,'0')}-15`,amount:surcharge,status:'pending',screen:'tax-surcharge'})
+  if(enabledTaxes.has('iit'))rows.push({name:'个人所得税',period:`${y}年${m}月`,due:`${y}-${String(m+1).padStart(2,'0')}-15`,amount:0,status:'pending',screen:'tax-iit'})
+  if(enabledTaxes.has('stamp'))rows.push({name:'印花税',period:`${y}年度`,due:`${y}-12-31`,amount:0,status:'pending',screen:'tax-stamp'})
+  if(enabledTaxes.has('property'))rows.push({name:'房产税',period:`${y}年上半年`,due:`${y}-06-30`,amount:0,status:'pending',screen:'tax-property'})
+  if(enabledTaxes.has('land'))rows.push({name:'城镇土地使用税',period:`${y}年上半年`,due:`${y}-06-30`,amount:0,status:'pending',screen:'tax-property'})
+  if(enabledTaxes.has('vehicle'))rows.push({name:'车船税',period:`${y}年度`,due:`${y}-12-31`,amount:0,status:'pending',screen:'tax-property'})
+
+  // 企所税
+  const q=Math.ceil(m/3)
+  rows.push({name:'企业所得税（季度预缴）',period:`${y}年第${q}季度`,due:`${y}-${String(q*3+1).padStart(2,'0')}-15`,amount:0,status:'pending',screen:'tax-cit'})
+
+  document.getElementById('tax-center-tbody').innerHTML=rows.map(r=>`
+    <tr>
+      <td style="font-weight:700;">${r.name}</td>
+      <td>${r.period}</td>
+      <td class="${new Date(r.due)<new Date()?'td-red':'td-gold'}">${r.due}</td>
+      <td class="td-red">${r.amount>0?'¥'+fmt(r.amount):'待计算'}</td>
+      <td>${badge(r.status)}</td>
+      <td><span style="font-size:12px;color:var(--blue2);cursor:pointer;" onclick="showScreen('${r.screen}')">申报 →</span></td>
+    </tr>`).join('')
+
+  // 统计卡片
+  const total=rows.reduce((s,r)=>s+r.amount,0)
+  document.getElementById('tax-center-stats').innerHTML=`
+    <div class="stat-card c-red"><div class="stat-label">本期应缴税款合计</div><div class="stat-value">¥${fmt(total)}</div><div class="stat-change warn">待申报</div></div>
+    <div class="stat-card c-gold"><div class="stat-label">已配置税种</div><div class="stat-value">${rows.length}<span class="unit">种</span></div></div>
+    <div class="stat-card c-green"><div class="stat-label">已申报</div><div class="stat-value">0<span class="unit">种</span></div></div>
+    <div class="stat-card c-blue"><div class="stat-label">最近截止日</div><div class="stat-value" style="font-size:16px;">${y}-${String(m+1).padStart(2,'0')}-15</div></div>`
+
+  // 税务日历
+  document.getElementById('tax-calendar-items').innerHTML=rows.map(r=>`
+    <div class="tax-item">
+      <span class="tax-date ${new Date(r.due)<new Date()?'done':'warn'}">${r.due}</span>
+      <span class="tax-name">${r.name}</span>
+      <span class="tax-amt">${r.amount>0?'¥'+fmt(r.amount):'待计算'}</span>
+    </div>`).join('')
+}
+
+function exportTaxSummary(){
+  const rows=[]
+  document.querySelectorAll('#tax-center-tbody tr').forEach(tr=>{
+    const cells=[...tr.querySelectorAll('td')].map(td=>td.textContent.trim())
+    if(cells.length>1)rows.push({'税种':cells[0],'申报期间':cells[1],'截止日期':cells[2],'应纳税额':cells[3],'状态':cells[4]})
+  })
+  const ws=XLSX.utils.json_to_sheet(rows)
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'税务申报汇总')
+  XLSX.writeFile(wb,'税务申报汇总.xlsx')
+}
+
+// ══ 附征税 ══
+async function calcSurchargeFromVAT(vatPayable){
+  const urbanRate=parseFloat(document.getElementById('tc-urban-rate')?.value)||0.07
+  const surTotal=vatPayable*(urbanRate+0.03+0.02)
+  document.getElementById('sur-base').textContent='¥'+fmt(vatPayable)
+  document.getElementById('sur-base2').textContent='¥'+fmt(vatPayable)
+  document.getElementById('sur-base3').textContent='¥'+fmt(vatPayable)
+  document.getElementById('sur-base4').textContent='¥'+fmt(vatPayable)
+  document.getElementById('sur-urban-rate').textContent=(urbanRate*100)+'%'
+  document.getElementById('sur-urban').textContent='¥'+fmt(vatPayable*urbanRate)
+  document.getElementById('sur-edu').textContent='¥'+fmt(vatPayable*0.03)
+  document.getElementById('sur-local-edu').textContent='¥'+fmt(vatPayable*0.02)
+  document.getElementById('sur-total-rate').textContent=((urbanRate+0.05)*100).toFixed(0)+'%'
+  document.getElementById('sur-total').textContent='¥'+fmt(surTotal)
+}
+
+async function calcSurcharge(){
+  if(!CO)return
+  await calcVAT()
+  const vatPayable=parseFloat(document.getElementById('vat-payable')?.textContent?.replace(/[¥,]/g,'')||'0')
+  await calcSurchargeFromVAT(vatPayable)
+}
+
+async function saveSurchargeFiling(){
+  if(!CO)return
+  const amount=parseFloat(document.getElementById('sur-total')?.textContent?.replace(/[¥,]/g,'')||'0')
+  const{error}=await sb.from('tax_filings').insert({company_id:CO.id,tax_type:'surcharge',period_year:new Date().getFullYear(),period_month:new Date().getMonth()+1,tax_amount:amount,status:'pending'})
+  if(error){alert('保存失败：'+error.message);return}
+  alert('✅ 附征税申报记录已保存')
+}
+
+function exportSurcharge(){
+  const data=[
+    {'税种':'城市维护建设税','税额':document.getElementById('sur-urban').textContent},
+    {'税种':'教育费附加','税额':document.getElementById('sur-edu').textContent},
+    {'税种':'地方教育附加','税额':document.getElementById('sur-local-edu').textContent},
+    {'税种':'合计','税额':document.getElementById('sur-total').textContent}
+  ]
+  const ws=XLSX.utils.json_to_sheet(data)
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'附征税申报')
+  XLSX.writeFile(wb,'附征税申报表.xlsx')
+}
+
+// ══ 印花税 ══
+let stampContracts=[]
+
+function openStampModal(){
+  $('modal-stamp').classList.add('show')
+  $('st-date').value=today()
+}
+
+function calcStampTax(){
+  const amount=parseFloat($('st-amount')?.value)||0
+  const rate=parseFloat($('st-type')?.value)||0
+  $('st-tax').textContent='¥'+fmt(amount*rate)
+}
+
+function calcStampTotal(){
+  const total=stampContracts.reduce((s,c)=>s+c.tax,0)
+  $('stamp-total').textContent='¥'+fmt(total)
+}
+
+async function saveStampContract(){
+  const name=$('st-name').value.trim()
+  if(!name){modalAlert('stamp','error','请填写合同名称');return}
+  const amount=parseFloat($('st-amount').value)||0
+  const rate=parseFloat($('st-type').value)||0
+  const tax=amount*rate
+  const sel=$('st-type')
+  const typeText=sel.options[sel.selectedIndex].text
+  stampContracts.push({name,type:typeText,amount,rate,tax,date:$('st-date').value,status:'pending'})
+  renderStampTable()
+  calcStampTotal()
+  closeModal('stamp')
+}
+
+function renderStampTable(){
+  $('stamp-tbody').innerHTML=stampContracts.map((c,i)=>`
+    <tr>
+      <td>${c.name}</td><td style="font-size:12px;">${c.type}</td>
+      <td class="td-green">¥${fmt(c.amount)}</td>
+      <td>${(c.rate*1000).toFixed(3)}‰</td>
+      <td class="td-red" style="font-weight:700;">¥${fmt(c.tax)}</td>
+      <td>${c.date}</td><td>${badge('pending')}</td>
+      <td><span style="font-size:12px;color:var(--red);cursor:pointer;" onclick="delStamp(${i})">删除</span></td>
+    </tr>`).join('')
+}
+
+function delStamp(i){stampContracts.splice(i,1);renderStampTable();calcStampTotal()}
+
+// ══ 房产税/土地税/车船税 ══
+function togglePropMethod(){
+  const m=$('pt-method').value
+  $('pt-value-fields').style.display=m==='value'?'block':'none'
+  $('pt-rent-fields').style.display=m==='rent'?'block':'none'
+  calcPropertyTax()
+}
+
+function calcPropertyTax(){
+  const m=$('pt-method')?.value
+  let tax=0
+  if(m==='value'){
+    const val=parseFloat($('pt-value')?.value)||0
+    const deduct=parseFloat($('pt-deduct')?.value)||0.1
+    tax=val*(1-deduct)*0.012
+  }else{
+    const rent=parseFloat($('pt-rent')?.value)||0
+    tax=rent*0.12
+  }
+  $('pt-result').textContent=fmt(tax)
+}
+
+function calcLandTax(){
+  const area=parseFloat($('lt-area')?.value)||0
+  const rate=parseFloat($('lt-rate')?.value)||30
+  $('lt-result').textContent=fmt(area*rate)
+}
+
+let vehicles=[]
+function openVehicleModal(){$('modal-vehicle').classList.add('show')}
+
+const VEHICLE_TAX={passenger_1:60,passenger_2:300,passenger_3:360,passenger_4:660,passenger_5:1200,passenger_6:2400,passenger_7:3600,truck:480,bus:480}
+function calcVehicleTax(){
+  const t=$('vh-type')?.value
+  $('vh-tax').textContent=fmt(VEHICLE_TAX[t]||0)
+}
+
+function saveVehicle(){
+  const plate=$('vh-plate').value.trim()
+  if(!plate){alert('请填写车牌号');return}
+  const sel=$('vh-type')
+  const type=sel.options[sel.selectedIndex].text
+  const tax=VEHICLE_TAX[sel.value]||0
+  vehicles.push({plate,type,tax})
+  renderVehicleTable()
+  closeModal('vehicle')
+}
+
+function renderVehicleTable(){
+  $('vehicle-tbody').innerHTML=vehicles.map((v,i)=>`
+    <tr><td>${v.plate}</td><td>${v.type}</td><td>—</td><td class="td-red" style="font-weight:700;">¥${fmt(v.tax)}/年</td><td>—</td>
+    <td><span style="font-size:12px;color:var(--red);cursor:pointer;" onclick="vehicles.splice(${i},1);renderVehicleTable()">删除</span></td></tr>`).join('')
+}
+
+// ══ 折旧管理 ══
+function showDepTab(tab,btn){
+  document.querySelectorAll('.dep-panel').forEach(p=>p.style.display='none')
+  document.querySelectorAll('#screen-asset-dep .tab-btn').forEach(b=>b.classList.remove('active'))
+  $('dep-'+tab).style.display='block'
+  btn.classList.add('active')
+}
+
+async function loadDepScreen(){
+  if(!CO)return
+  const{data:assetList}=await sb.from('assets').select('*').eq('company_id',CO.id).eq('status','active')
+  if(!assetList||!assetList.length){
+    $('dep-schedule-tbody').innerHTML='<tr><td colspan="9" style="text-align:center;padding:36px;color:var(--gray2);">暂无在用固定资产</td></tr>'
+    return
+  }
+  let totalValue=0,totalAcc=0,totalNet=0,totalMonthly=0
+  const mmap={straight:'直线法',declining:'双倍余额递减',sum_of_years:'年数总和'}
+  $('dep-schedule-tbody').innerHTML=assetList.map(a=>{
+    const monthly=+((a.original_value*(1-(a.residual_rate||0.05)))/(a.useful_life_months||60)).toFixed(2)
+    const monthsUsed=Math.round(a.accumulated_depreciation/monthly)||0
+    const remaining=Math.max(0,(a.useful_life_months||60)-monthsUsed)
+    totalValue+=a.original_value;totalAcc+=a.accumulated_depreciation;totalNet+=(a.net_value||a.original_value);totalMonthly+=monthly
+    return`<tr>
+      <td style="font-weight:600;">${a.name}</td>
+      <td style="font-size:12px;">${mmap[a.depreciation_method]||a.depreciation_method}</td>
+      <td class="td-green">¥${fmt(a.original_value)}</td>
+      <td>¥${fmt(a.original_value*(a.residual_rate||0.05))}</td>
+      <td>${monthsUsed}月</td>
+      <td class="${remaining<=6?'td-red':''}">${remaining}月</td>
+      <td class="td-gold" style="font-weight:700;">¥${fmt(monthly)}</td>
+      <td class="td-red">¥${fmt(a.accumulated_depreciation)}</td>
+      <td class="td-green">¥${fmt(a.net_value||a.original_value)}</td>
+    </tr>`
+  }).join('')
+  $('dep-total-value').innerHTML=fmt(totalValue)+'<span class="unit">元</span>'
+  $('dep-total-acc').innerHTML=fmt(totalAcc)+'<span class="unit">元</span>'
+  $('dep-total-net').innerHTML=fmt(totalNet)+'<span class="unit">元</span>'
+  $('dep-monthly').innerHTML=fmt(totalMonthly)+'<span class="unit">元</span>'
+  // 历史记录
+  const{data:vhist}=await sb.from('vouchers').select('*').eq('company_id',CO.id).like('summary','%折旧%').order('created_at',{ascending:false}).limit(12)
+  $('dep-history-tbody').innerHTML=(vhist&&vhist.length)?vhist.map(v=>`
+    <tr><td>${v.voucher_date.slice(0,7)}</td><td style="font-family:monospace;font-size:12px;">${v.voucher_no}</td><td class="td-red">¥${fmt(v.total_debit)}</td><td>全部资产</td><td>${badge(v.status)}</td></tr>`).join('')
+    :'<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--gray2);">暂无折旧历史</td></tr>'
+}
+
+async function runDepreciation(){
+  await calcDepreciation()
+  await loadDepScreen()
+}
+
+async function exportDepReport(){
+  const{data:assetList}=await sb.from('assets').select('*').eq('company_id',CO.id)
+  if(!assetList||!assetList.length){alert('暂无资产数据');return}
+  const ws=XLSX.utils.json_to_sheet(assetList.map(a=>{
+    const monthly=+((a.original_value*(1-(a.residual_rate||0.05)))/(a.useful_life_months||60)).toFixed(2)
+    return{'资产名称':a.name,'折旧方法':a.depreciation_method,'原值':a.original_value,'残值率':a.residual_rate,'使用年限(月)':a.useful_life_months,'月折旧额':monthly,'累计折旧':a.accumulated_depreciation,'净值':a.net_value}
+  }))
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'折旧计划表')
+  XLSX.writeFile(wb,'折旧计划表.xlsx')
+}
+
+// ══ 费用报销 ══
+let expItems=[]
+
+async function loadExpenses(){
+  if(!CO)return
+  const{data}=await sb.from('expense_reports').select('*,employees(name)').eq('company_id',CO.id).order('created_at',{ascending:false})
+  const pending=(data||[]).filter(r=>r.status==='draft').length
+  const approved=(data||[]).filter(r=>r.status==='approved').length
+  const posted=(data||[]).filter(r=>r.status==='posted').length
+  const total=(data||[]).filter(r=>new Date(r.created_at).getMonth()===new Date().getMonth()).reduce((s,r)=>s+r.total_amount,0)
+  $('exp-total').innerHTML=fmt(total)+'<span class="unit">元</span>'
+  $('exp-pending').innerHTML=pending+'<span class="unit">单</span>'
+  $('exp-approved').innerHTML=approved+'<span class="unit">单</span>'
+  $('exp-posted').innerHTML=posted+'<span class="unit">单</span>'
+  const tb=$('expense-tbody')
+  if(!data||!data.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--gray2);">暂无报销记录</td></tr>';return}
+  tb.innerHTML=data.map(r=>`
+    <tr>
+      <td style="font-family:monospace;font-size:12px;">${r.report_no||'—'}</td>
+      <td style="font-weight:600;">${r.employees?.name||'—'}</td>
+      <td>${r.title||'—'}</td>
+      <td class="td-gold" style="font-weight:700;">¥${fmt(r.total_amount)}</td>
+      <td>${r.created_at?.slice(0,10)||'—'}</td>
+      <td>${badge(r.status)}</td>
+      <td style="white-space:nowrap;">
+        ${r.status==='draft'?`<span style="font-size:12px;color:var(--green2);cursor:pointer;margin-right:8px;" onclick="approveExpense('${r.id}')">审核</span>`:''}
+        ${r.status==='approved'?`<span style="font-size:12px;color:var(--blue2);cursor:pointer;margin-right:8px;" onclick="postExpense('${r.id}')">入账</span>`:''}
+        <span style="font-size:12px;color:var(--red);cursor:pointer;" onclick="delExpense('${r.id}')">删除</span>
+      </td>
+    </tr>`).join('')
+}
+
+async function openExpenseModal(){
+  expItems=[]
+  $('modal-expense').classList.add('show')
+  $('exp-date').value=today()
+  // 加载员工列表
+  const{data}=await sb.from('employees').select('id,name').eq('company_id',CO.id).eq('status','active')
+  $('exp-employee').innerHTML='<option value="">请选择员工</option>'+(data||[]).map(e=>`<option value="${e.id}">${e.name}</option>`).join('')
+  addExpItem()
+}
+
+function addExpItem(){
+  const id=Date.now()
+  expItems.push({id,desc:'',cat:'差旅费',amount:0})
+  renderExpItems()
+}
+
+function renderExpItems(){
+  const cats=['差旅费','餐饮费','办公用品','交通费','住宿费','通讯费','业务招待费','培训费','其他']
+  $('exp-items-rows').innerHTML=expItems.map((item,i)=>`
+    <div style="display:contents;">
+      <input type="text" placeholder="费用说明" value="${item.desc}" oninput="expItems[${i}].desc=this.value" style="padding:8px 11px;border:none;border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);font-size:13px;font-family:inherit;outline:none;"/>
+      <select onchange="expItems[${i}].cat=this.value" style="padding:8px 11px;border:none;border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);font-size:13px;font-family:inherit;outline:none;">
+        ${cats.map(c=>`<option ${c===item.cat?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <input type="number" placeholder="0" value="${item.amount||''}" oninput="expItems[${i}].amount=parseFloat(this.value)||0;updateExpTotal()" style="padding:8px 11px;border:none;border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);font-size:13px;font-family:inherit;outline:none;"/>
+      <div style="display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border2);cursor:pointer;color:var(--gray2);" onclick="expItems.splice(${i},1);renderExpItems()">×</div>
+    </div>`).join('')
+}
+
+function updateExpTotal(){
+  const total=expItems.reduce((s,i)=>s+i.amount,0)
+  $('exp-total-val').textContent='¥'+fmt(total)
+}
+
+async function saveExpense(){
+  const empId=$('exp-employee').value,title=$('exp-title').value.trim()
+  if(!title){modalAlert('expense','error','请填写报销事由');return}
+  const total=expItems.reduce((s,i)=>s+i.amount,0)
+  if(total<=0){modalAlert('expense','error','请填写报销明细和金额');return}
+  const reportNo=`报销-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`
+  const{error}=await sb.from('expense_reports').insert({
+    company_id:CO.id,employee_id:empId||null,report_no:reportNo,
+    title,total_amount:total,status:'draft',
+    items:expItems.map(i=>({desc:i.desc,cat:i.cat,amount:i.amount}))
+  })
+  if(error){modalAlert('expense','error','保存失败：'+error.message);return}
+  closeModal('expense')
+  loadExpenses()
+}
+
+async function approveExpense(id){
+  await sb.from('expense_reports').update({status:'approved',approved_by:CU.id,approved_at:new Date().toISOString()}).eq('id',id)
+  loadExpenses()
+}
+
+async function postExpense(id){
+  const{data:r}=await sb.from('expense_reports').select('*,employees(name)').eq('id',id).single()
+  if(!r)return
+  // 生成费用凭证
+  const items=r.items||[]
+  const vno=`费用-${new Date().getFullYear()}-${String(await nextSeq()).padStart(4,'0')}`
+  const lines=[]
+  items.forEach((item,i)=>{
+    lines.push({account_code:'6602',account_name:'管理费用',summary:item.desc||item.cat,debit_amount:item.amount,credit_amount:0,line_no:i+1})
+  })
+  lines.push({account_code:'2241',account_name:'其他应付款',summary:`应付${r.employees?.name||''}报销款`,debit_amount:0,credit_amount:r.total_amount,line_no:items.length+1})
+  const{data:v}=await sb.from('vouchers').insert({company_id:CO.id,voucher_no:vno,voucher_date:today(),period_year:new Date().getFullYear(),period_month:new Date().getMonth()+1,summary:`${r.title}报销入账`,total_debit:r.total_amount,total_credit:r.total_amount,status:'pending',source:'manual',creator_id:CU.id}).select().single()
+  if(v){
+    await sb.from('voucher_lines').insert(lines.map(l=>({...l,voucher_id:v.id,company_id:CO.id})))
+    await sb.from('expense_reports').update({status:'posted'}).eq('id',id)
+    alert(`✅ 已入账，凭证号：${vno}`)
+  }
+  loadExpenses()
+}
+
+async function delExpense(id){if(!confirm('确认删除？'))return;await sb.from('expense_reports').delete().eq('id',id);loadExpenses()}
+
+function exportExpenses(){
+  sb.from('expense_reports').select('*,employees(name)').eq('company_id',CO.id).then(({data})=>{
+    if(!data||!data.length){alert('暂无数据');return}
+    const ws=XLSX.utils.json_to_sheet(data.map(r=>({'单号':r.report_no,'报销人':r.employees?.name,'事由':r.title,'金额':r.total_amount,'状态':r.status,'日期':r.created_at?.slice(0,10)})))
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'费用报销')
+    XLSX.writeFile(wb,'费用报销.xlsx')
+  })
+}
+
+// ══ 出纳管理 ══
+async function genBankReconcile(){
+  if(!CO)return
+  const y=parseInt($('cash-year').value),m=parseInt($('cash-month').value)
+  // 从凭证分录计算银行存款账面余额
+  const{data:lines}=await sb.from('voucher_lines').select('account_code,debit_amount,credit_amount,vouchers(period_year,period_month,status)').eq('company_id',CO.id)
+  let bankBalance=0
+  ;(lines||[]).forEach(l=>{
+    if(!l.vouchers||l.vouchers.status==='void')return
+    const{period_year:vy,period_month:vm}=l.vouchers
+    if(vy>y||(vy===y&&vm>m))return
+    if(l.account_code==='1002'){bankBalance+=l.debit_amount-l.credit_amount}
+  })
+  $('reconcile-body').innerHTML=`
+    <div style="font-size:13px;line-height:2.5;color:var(--ink);">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px;letter-spacing:1px;">银行存款余额调节表 ${y}年${m}月</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;">
+        <div>企业账面余额</div><div class="td-green" style="font-weight:700;font-family:monospace;">¥${fmt(bankBalance)}</div>
+        <div>加：银行已收企业未收</div><div><input type="number" id="rec-add1" placeholder="0" style="width:120px;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:13px;" oninput="updateReconcile()"/></div>
+        <div>减：银行已付企业未付</div><div><input type="number" id="rec-sub1" placeholder="0" style="width:120px;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:13px;" oninput="updateReconcile()"/></div>
+        <div style="font-weight:700;border-top:1px solid var(--border);padding-top:8px;">调节后账面余额</div>
+        <div style="font-weight:700;border-top:1px solid var(--border);padding-top:8px;" id="rec-adj-book" class="td-green">¥${fmt(bankBalance)}</div>
+        <div style="margin-top:12px;">银行对账单余额</div>
+        <div><input type="number" id="rec-bank-bal" placeholder="填入银行对账单余额" style="width:160px;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:13px;" oninput="updateReconcile()"/></div>
+        <div>加：企业已收银行未收</div><div><input type="number" id="rec-add2" placeholder="0" style="width:120px;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:13px;" oninput="updateReconcile()"/></div>
+        <div>减：企业已付银行未付</div><div><input type="number" id="rec-sub2" placeholder="0" style="width:120px;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:13px;" oninput="updateReconcile()"/></div>
+        <div style="font-weight:700;border-top:1px solid var(--border);padding-top:8px;">调节后银行余额</div>
+        <div style="font-weight:700;border-top:1px solid var(--border);padding-top:8px;" id="rec-adj-bank" class="td-green">—</div>
+      </div>
+      <div id="rec-result" style="margin-top:12px;padding:10px;border-radius:7px;font-size:13px;"></div>
+    </div>`
+  // 隐藏变量
+  window._bankBalBase=bankBalance
+  $('bank-bal-tbody').innerHTML=`<tr><td>银行存款</td><td class="td-green">¥${fmt(bankBalance)}</td><td>—</td><td>—</td><td class="td-green">¥${fmt(bankBalance)}</td></tr>`
+}
+
+function updateReconcile(){
+  const base=window._bankBalBase||0
+  const add1=parseFloat($('rec-add1')?.value)||0
+  const sub1=parseFloat($('rec-sub1')?.value)||0
+  const adjBook=base+add1-sub1
+  $('rec-adj-book').textContent='¥'+fmt(adjBook)
+  const bankBal=parseFloat($('rec-bank-bal')?.value)||0
+  const add2=parseFloat($('rec-add2')?.value)||0
+  const sub2=parseFloat($('rec-sub2')?.value)||0
+  const adjBank=bankBal+add2-sub2
+  $('rec-adj-bank').textContent='¥'+fmt(adjBank)
+  const result=$('rec-result')
+  if(Math.abs(adjBook-adjBank)<0.01){
+    result.style.cssText='background:var(--green-soft);border:1px solid #b8e0c8;color:var(--green);'
+    result.textContent='✅ 账实相符，调节后两端余额一致：¥'+fmt(adjBook)
+  }else{
+    result.style.cssText='background:var(--red-soft);border:1px solid #f0c0bc;color:var(--red);'
+    result.textContent='⚠ 差额：¥'+fmt(Math.abs(adjBook-adjBank))+'，请检查未达账项是否完整'
+  }
+}
+
+function openCashEntryModal(){alert('现金日记账录入功能即将上线')}
+
+// ══ 政策文档 ══
+let activePolicies=[]
+
+async function loadPolicies(){
+  if(!CO)return
+  const{data}=await sb.from('policy_docs').select('*').eq('company_id',CO.id).order('created_at',{ascending:false})
+  activePolicies=(data||[]).filter(p=>p.is_active)
+  const list=$('policy-list')
+  if(!data||!data.length){
+    list.innerHTML='<div class="empty-state" style="padding:36px;"><div class="empty-icon">📜</div><div class="empty-title">暂无政策文档</div><div class="empty-sub">添加最新税法、会计准则等政策</div></div>'
+    return
+  }
+  const catLabels={vat:'增值税',cit:'企业所得税',iit:'个人所得税',social:'社保公积金',accounting:'会计准则',invoice:'发票管理',other:'其他'}
+  list.innerHTML=data.map(p=>`
+    <div class="policy-item">
+      <div class="policy-dot ${p.is_active?'':'off'}"></div>
+      <div class="policy-info">
+        <div class="policy-title">${p.title}</div>
+        <div class="policy-meta">${catLabels[p.category]||p.category} · ${p.effective_date||'—'} · ${p.source||''}</div>
+        <div style="font-size:11px;color:var(--gray2);margin-top:4px;line-height:1.5;">${p.content.slice(0,80)}${p.content.length>80?'...':''}</div>
+      </div>
+      <div class="policy-actions">
+        <span style="font-size:11px;cursor:pointer;color:${p.is_active?'var(--green2)':'var(--gray2)'};" onclick="togglePolicy('${p.id}',${p.is_active})">${p.is_active?'已激活':'已停用'}</span>
+        <span style="font-size:11px;cursor:pointer;color:var(--red);margin-left:8px;" onclick="deletePolicy('${p.id}')">删除</span>
+      </div>
+    </div>`).join('')
+}
+
+function openPolicyModal(){
+  $('modal-policy').classList.add('show')
+  $('p-date').value=today()
+}
+
+async function savePolicy(){
+  const title=$('p-title').value.trim(),content=$('p-content').value.trim()
+  if(!title||!content){modalAlert('policy','error','请填写政策名称和内容');return}
+  const{error}=await sb.from('policy_docs').insert({company_id:CO.id,title,content,category:$('p-cat').value,effective_date:$('p-date').value||null,source:$('p-source').value,is_active:true})
+  if(error){modalAlert('policy','error','保存失败：'+error.message);return}
+  closeModal('policy')
+  await loadPolicies()
+  appendAIMsg('ai','账先生 AI',`✅ 政策「${title}」已添加到知识库并激活，我将在后续对话中自动遵循此政策。`)
+}
+
+async function togglePolicy(id,current){
+  await sb.from('policy_docs').update({is_active:!current}).eq('id',id)
+  await loadPolicies()
+}
+
+async function deletePolicy(id){
+  if(!confirm('确认删除此政策？'))return
+  await sb.from('policy_docs').delete().eq('id',id)
+  await loadPolicies()
+}
+
+// 内置政策模板
+const POLICY_TEMPLATES={
+  vat2024:{title:'增值税税率表（2024年现行）',category:'vat',content:`增值税现行税率规定（2024年）：
+1. 一般纳税人：
+   - 销售货物/提供劳务：13%
+   - 交通运输/建筑/房地产/基础电信：9%  
+   - 现代服务/金融/生活服务/教育医疗：6%
+   - 农产品/水产品/粮食等农业产品：9%
+2. 小规模纳税人：
+   - 一般适用征收率：3%
+   - 不动产/劳动力资源：5%
+   - 注意：季度销售额不超30万元免征增值税
+3. 进项税额抵扣规则：
+   - 增值税专票、海关完税凭证可抵扣
+   - 电子发票与纸质发票同等效力
+   - 认证期限：开具之日起360天内`},
+  iit2024:{title:'个税专项扣除标准（2024年）',category:'iit',content:`个人所得税专项附加扣除标准（2024年现行）：
+1. 子女教育：每个子女每月2000元（原1000元，2023年提高）
+2. 继续教育：学历教育每月400元；职业资格每年3600元
+3. 大病医疗：年度超过15000元部分，最高80000元/年
+4. 住房贷款利息：每月1000元，最长240个月
+5. 住房租金：
+   - 直辖市/省会/计划单列市：1500元/月
+   - 人口>100万城市：1100元/月
+   - 其他城市：800元/月
+6. 赡养老人：
+   - 独生子女：每月3000元（原2000元，2023年提高）
+   - 非独生子女：共同分摊，每月最高3000元
+7. 3岁以下婴幼儿照护：每个婴幼儿每月2000元
+基本减除费用：5000元/月`},
+  social2024:{title:'社保缴费比例（2024年通用标准）',category:'social',content:`社会保险缴费比例（2024年，各地略有差异）：
+养老保险：单位16%，个人8%
+医疗保险：单位约8%，个人2%+3元（各地不同）
+失业保险：单位0.5%，个人0.5%
+工伤保险：单位0.2%-1.9%（按行业），个人不缴
+生育保险：单位约0.8%，个人不缴
+住房公积金：单位5%-12%，个人5%-12%（同比例）
+注意：
+- 社保缴费基数下限=当地上年职工月均工资60%
+- 社保缴费基数上限=当地上年职工月均工资300%
+- 2024年全国职工月均工资各地不同，请查询当地社保局`},
+  sme2024:{title:'小微企业税收优惠（2024年）',category:'cit',content:`小微企业税收优惠政策（2024年）：
+1. 企业所得税：
+   - 年应纳税所得额≤300万元：减按25%计入所得额，按20%税率，实际税负5%
+   - 年应纳税所得额300-3000万元：按20%优惠税率
+   - 适用条件：从事非限制性行业，资产总额≤5000万元，职工≤300人
+2. 增值税：
+   - 小规模纳税人月销售额≤10万元（季度≤30万元）免征增值税
+   - 适用3%征收率的，减按1%征收（延续政策，具体到期日期请查最新公告）
+3. "六税两费"减半：
+   - 增值税小规模纳税人、小微企业、个体工商户
+   - 减半征收资源税、城市维护建设税、房产税、城镇土地使用税、印花税、耕地占用税和教育费附加、地方教育附加`}
+}
+
+async function addTemplatePolicy(key){
+  const tpl=POLICY_TEMPLATES[key]
+  if(!tpl||!CO)return
+  const{error}=await sb.from('policy_docs').insert({company_id:CO.id,...tpl,effective_date:today(),source:'系统内置',is_active:true})
+  if(error){alert('添加失败：'+error.message);return}
+  await loadPolicies()
+  appendAIMsg('ai','账先生 AI',`✅ 已添加「${tpl.title}」到政策知识库并激活。`)
+}
+
+// ══ 报表格式模板 ══
+const STD_BS_ITEMS=[
+  {row:1,name:'流动资产',accounts:'—',calc:'分类合计'},
+  {row:2,name:'货币资金',accounts:'1001+1002+1012',calc:'借方余额'},
+  {row:3,name:'应收票据',accounts:'1121',calc:'借方余额'},
+  {row:4,name:'应收账款',accounts:'1122',calc:'借方余额'},
+  {row:5,name:'预付账款',accounts:'1123',calc:'借方余额'},
+  {row:6,name:'其他应收款',accounts:'1221',calc:'借方余额'},
+  {row:7,name:'存货',accounts:'1403+1405+1406',calc:'借方余额'},
+  {row:8,name:'流动资产合计',accounts:'—',calc:'上述合计'},
+  {row:9,name:'非流动资产',accounts:'—',calc:'分类合计'},
+  {row:10,name:'固定资产',accounts:'1601-1602',calc:'借方余额-贷方余额'},
+  {row:11,name:'在建工程',accounts:'1604',calc:'借方余额'},
+  {row:12,name:'无形资产',accounts:'1701-1702',calc:'借方余额-贷方余额'},
+  {row:13,name:'非流动资产合计',accounts:'—',calc:'上述合计'},
+  {row:14,name:'资产总计',accounts:'—',calc:'流动+非流动'},
+  {row:15,name:'流动负债',accounts:'—',calc:'分类合计'},
+  {row:16,name:'应付账款',accounts:'2202',calc:'贷方余额'},
+  {row:17,name:'预收账款',accounts:'2203',calc:'贷方余额'},
+  {row:18,name:'应付职工薪酬',accounts:'2211',calc:'贷方余额'},
+  {row:19,name:'应交税费',accounts:'2221',calc:'贷方余额'},
+  {row:20,name:'其他应付款',accounts:'2241',calc:'贷方余额'},
+  {row:21,name:'流动负债合计',accounts:'—',calc:'上述合计'},
+  {row:22,name:'所有者权益',accounts:'—',calc:'分类合计'},
+  {row:23,name:'实收资本',accounts:'3001',calc:'贷方余额'},
+  {row:24,name:'资本公积',accounts:'3002',calc:'贷方余额'},
+  {row:25,name:'盈余公积',accounts:'3101',calc:'贷方余额'},
+  {row:26,name:'未分配利润',accounts:'3104+3103',calc:'贷方余额'},
+  {row:27,name:'所有者权益合计',accounts:'—',calc:'上述合计'},
+  {row:28,name:'负债和所有者权益总计',accounts:'—',calc:'负债+权益'},
+]
+const STD_IS_ITEMS=[
+  {row:1,name:'一、营业收入',accounts:'6001+6011',calc:'贷方发生额'},
+  {row:2,name:'减：营业成本',accounts:'6401+6402',calc:'借方发生额'},
+  {row:3,name:'减：税金及附加',accounts:'6403',calc:'借方发生额'},
+  {row:4,name:'减：销售费用',accounts:'6601',calc:'借方发生额'},
+  {row:5,name:'减：管理费用',accounts:'6602',calc:'借方发生额'},
+  {row:6,name:'减：研发费用',accounts:'6604',calc:'借方发生额'},
+  {row:7,name:'减：财务费用',accounts:'6603',calc:'借方发生额'},
+  {row:8,name:'加：其他收益',accounts:'6101',calc:'贷方发生额'},
+  {row:9,name:'加：投资收益',accounts:'6061',calc:'贷方发生额'},
+  {row:10,name:'二、营业利润',accounts:'—',calc:'收入-成本-费用+其他'},
+  {row:11,name:'加：营业外收入',accounts:'6101',calc:'贷方发生额'},
+  {row:12,name:'减：营业外支出',accounts:'6711',calc:'借方发生额'},
+  {row:13,name:'三、利润总额',accounts:'—',calc:'营业利润±营业外'},
+  {row:14,name:'减：所得税费用',accounts:'6111',calc:'借方发生额'},
+  {row:15,name:'四、净利润',accounts:'—',calc:'利润总额-所得税'},
+]
+const STD_CF_ITEMS=[
+  {row:1,name:'一、经营活动产生的现金流量',accounts:'—',note:''},
+  {row:2,name:'销售商品、提供劳务收到的现金',accounts:'—',note:'含税收入+预收-应收变动'},
+  {row:3,name:'收到的税费返还',accounts:'—',note:'退税款'},
+  {row:4,name:'支付给职工以及为职工支付的现金',accounts:'—',note:'工资+社保公司部分'},
+  {row:5,name:'支付的各项税费',accounts:'—',note:'已缴税款'},
+  {row:6,name:'经营活动产生的现金流量净额',accounts:'—',note:'收入-支出'},
+  {row:7,name:'二、投资活动产生的现金流量',accounts:'—',note:''},
+  {row:8,name:'购建固定资产、无形资产支付的现金',accounts:'—',note:'资产采购'},
+  {row:9,name:'投资活动产生的现金流量净额',accounts:'—',note:''},
+  {row:10,name:'三、筹资活动产生的现金流量',accounts:'—',note:''},
+  {row:11,name:'取得借款收到的现金',accounts:'—',note:'借款收入'},
+  {row:12,name:'筹资活动产生的现金流量净额',accounts:'—',note:''},
+  {row:13,name:'四、现金及现金等价物净增加额',accounts:'—',note:'三项合计'},
+]
+
+function showRptTplTab(tab,btn){
+  document.querySelectorAll('.tpl-panel').forEach(p=>p.style.display='none')
+  document.querySelectorAll('#screen-rpt-template .tab-btn').forEach(b=>b.classList.remove('active'))
+  $('tpl-'+tab).style.display='block'
+  btn.classList.add('active')
+}
+
+function loadStdTemplates(){
+  // 资产负债表
+  $('bs-items-tbody').innerHTML=STD_BS_ITEMS.map(r=>`<tr><td>${r.row}</td><td style="font-weight:${r.name.startsWith('—')||r.calc==='分类合计'?'400':'600'};${r.name.includes('合计')||r.name.includes('总计')?'background:var(--paper2);':''}">${r.name}</td><td style="font-family:monospace;font-size:12px;color:var(--blue2);">${r.accounts}</td><td style="font-size:12px;color:var(--gray2);">${r.calc}</td></tr>`).join('')
+  // 利润表
+  $('is-items-tbody').innerHTML=STD_IS_ITEMS.map(r=>`<tr><td>${r.row}</td><td style="font-weight:${r.name.startsWith('一')||r.name.startsWith('二')||r.name.startsWith('三')||r.name.startsWith('四')?'700':'400'};${r.name.startsWith('一')||r.name.startsWith('二')||r.name.startsWith('三')||r.name.startsWith('四')?'background:var(--paper2);':''}">${r.name}</td><td style="font-family:monospace;font-size:12px;color:var(--blue2);">${r.accounts}</td><td style="font-size:12px;color:var(--gray2);">${r.calc}</td></tr>`).join('')
+  // 现金流量表
+  $('cf-items-tbody').innerHTML=STD_CF_ITEMS.map(r=>`<tr><td>${r.row}</td><td style="font-weight:${r.name.startsWith('一')||r.name.startsWith('二')||r.name.startsWith('三')||r.name.startsWith('四')?'700':'400'}">${r.name}</td><td style="font-size:12px;color:var(--gray2);">${r.note}</td></tr>`).join('')
+  // 所有者权益变动表
+  $('eq-tbody').innerHTML=`
+    <tr><td>期初余额</td><td class="rpt-num" id="eq-capital">—</td><td class="rpt-num">—</td><td class="rpt-num">—</td><td class="rpt-num" id="eq-profit">—</td><td class="rpt-num">—</td></tr>
+    <tr><td>本期增减</td><td class="rpt-num">—</td><td class="rpt-num">—</td><td class="rpt-num">—</td><td class="rpt-num">—</td><td class="rpt-num">—</td></tr>
+    <tr style="font-weight:700;background:var(--paper2);"><td>期末余额</td><td class="rpt-num">—</td><td class="rpt-num">—</td><td class="rpt-num">—</td><td class="rpt-num">—</td><td class="rpt-num">—</td></tr>`
+  alert('✅ 国标格式已加载，报表将按此格式生成')
+}
+
+async function applyStdTemplate(type){
+  if(!CO)return
+  const templates={bs:{items:STD_BS_ITEMS},is:{items:STD_IS_ITEMS},cf:{items:STD_CF_ITEMS}}
+  const{error}=await sb.from('report_templates').insert({company_id:CO.id,report_type:type,title:`国标${{bs:'资产负债表',is:'利润表',cf:'现金流量表'}[type]}格式`,template_data:templates[type],is_active:true,source:'standard'})
+  if(error&&!error.message.includes('duplicate')){alert('保存失败：'+error.message);return}
+  alert(`✅ ${{bs:'资产负债表',is:'利润表',cf:'现金流量表'}[type]}国标格式已保存`)
+}
+
+function openTemplateModal(){$('modal-template').classList.add('show')}
+
+async function handleTemplateFile(e){
+  const file=e.target.files[0];if(!file)return
+  const reader=new FileReader()
+  reader.onload=async ev=>{
+    const wb=XLSX.read(ev.target.result,{type:'binary'})
+    const ws=wb.Sheets[wb.SheetNames[0]]
+    const json=XLSX.utils.sheet_to_json(ws,{header:1})
+    // 用AI分析格式
+    const preview=$('tpl-preview'),previewContent=$('tpl-preview-content')
+    preview.style.display='block'
+    previewContent.innerHTML='<span class="spinner dark"></span> AI正在分析报表格式...'
+    try{
+      const tableText=json.slice(0,20).map(r=>r.join('\t')).join('\n')
+      const resp=await fetch(AI_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'auto',messages:[{role:'user',content:`分析这个Excel报表格式，识别行项目名称和对应的会计科目，返回简洁的分析结果：\n\n${tableText}`}],max_tokens:600})})
+      const data=await resp.json()
+      const result=data.choices?.[0]?.message?.content||'识别完成'
+      previewContent.innerHTML=result.replace(/\n/g,'<br>')
+      $('tpl-desc').value=result
+    }catch(err){
+      previewContent.innerHTML='自动识别失败，请手动填写格式描述'
+    }
+  }
+  reader.readAsBinaryString(file)
+}
+
+async function saveTemplate(){
+  const title=$('tpl-title').value.trim()||'自定义格式'
+  const type=$('tpl-type').value
+  const desc=$('tpl-desc').value.trim()
+  if(!desc){modalAlert('template','error','请填写格式描述或上传文件');return}
+  const{error}=await sb.from('report_templates').insert({company_id:CO.id,report_type:type,title,template_data:{description:desc},is_active:true,source:'custom'})
+  if(error){modalAlert('template','error','保存失败：'+error.message);return}
+  closeModal('template')
+  alert('✅ 报表格式已保存，生成报表时将使用此格式')
+}
+
+// ══ 报表附注 ══
+async function genNotes(){
+  if(!CO)return
+  const btn=event.target
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>AI生成中...'
+  try{
+    const coName=CO.name
+    const prompt=`请为中国小微企业生成标准财务报表附注内容，公司名称：${coName}。
+包含：
+1. 企业基本情况（通用模板）
+2. 主要会计政策（小企业会计准则）
+3. 重要科目说明（货币资金、应收账款、存货、固定资产）
+4. 期后事项说明（通用表述）
+用中文，专业规范，每部分100-150字。`
+    const resp=await fetch(AI_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'auto',messages:[{role:'user',content:prompt}],max_tokens:1500})})
+    const data=await resp.json()
+    const text=data.choices?.[0]?.message?.content||''
+    // 简单分段
+    const parts=text.split(/[一二三四]、/)
+    if(parts.length>=4){
+      $('note-basic').value=parts[1]?.trim()||''
+      $('note-policy').value=parts[2]?.trim()||''
+      $('note-accounts').value=parts[3]?.trim()||''
+      $('note-events').value=parts[4]?.trim()||'本报告批准报出日至资产负债表日之间无重大期后事项需要披露。'
+    }else{
+      $('note-basic').value=text
+    }
+  }catch(err){alert('生成失败：'+err.message)}
+  btn.disabled=false;btn.innerHTML='⚡ AI自动生成附注内容'
+}
+
+async function saveNotes(){
+  const notes={basic:$('note-basic').value,policy:$('note-policy').value,accounts:$('note-accounts').value,events:$('note-events').value}
+  if(!CO)return
+  const{error}=await sb.from('report_templates').upsert({company_id:CO.id,report_type:'notes',title:'财务报表附注',template_data:notes,is_active:true,source:'custom'},{onConflict:'company_id,report_type'})
+  if(error){alert('保存失败：'+error.message);return}
+  alert('✅ 附注已保存')
+}
+
+function exportNotes(){
+  const content=`财务报表附注\n\n一、企业基本情况\n${$('note-basic').value}\n\n二、主要会计政策和会计估计\n${$('note-policy').value}\n\n三、重要会计科目说明\n${$('note-accounts').value}\n\n四、期后事项\n${$('note-events').value}`
+  const blob=new Blob([content],{type:'text/plain;charset=utf-8'})
+  const url=URL.createObjectURL(blob)
+  const a=document.createElement('a');a.href=url;a.download='财务报表附注.txt';a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ══ AI CHAT + FUNCTION CALLING ══
+
+const AI_SYSTEM=`你是"账先生AI助手"，可以直接控制账先生会计软件执行操作。
+
+你有以下工具可以调用：
+- navigate(screen): 跳转页面。screen可选值：dashboard/invoice/voucher/opening/accounts/reports/closing/tax-vat/tax-cit/tax-iit/employee/payroll/assets/inventory/bank
+- calc_vat(year,month): 计算指定期间增值税
+- calc_cit(year,quarter): 计算企业所得税季度预缴
+- calc_payroll(year,month): 核算员工工资
+- gen_reports(year,month): 生成财务三大报表
+- calc_depreciation(): 计提本月固定资产折旧
+- do_closing(year,month): 执行账期结转
+- query_balances(year,month): 查询科目余额表
+- open_voucher(): 打开新建凭证窗口
+- open_upload(): 打开发票上传页面
+- open_add_employee(): 打开添加员工窗口
+- open_add_asset(): 打开添加固定资产窗口
+- gen_iit(year,month): 生成个税申报数据
+- save_vat(): 保存增值税申报记录
+- add_policy(): 打开添加政策窗口
+- load_std_template(): 加载国标报表格式
+- gen_notes(): AI生成财务报表附注
+- calc_surcharge(): 计算附征税
+- calc_all_tax(): 一键计算所有税种
+- open_expense(): 新建费用报销单
+- run_depreciation(): 计提本月折旧
+- bank_reconcile(): 生成银行余额调节表
+
+当用户说要执行某个操作时，你必须调用对应工具，格式如下：
+[TOOL:工具名(参数1,参数2)]
+
+例如用户说"帮我算4月工资"，你回复：
+[TOOL:calc_payroll(2025,4)]
+正在为您核算2025年4月工资，请稍候...
+
+用户说"跳转到报表页"，你回复：
+[TOOL:navigate(reports)]
+已为您打开财务报表页面。
+
+工具调用必须放在回复开头。如果不需要调用工具，正常用中文回答会计问题。
+你精通中国企业会计准则、增值税、企业所得税、个税、社保、发票管理。回答专业简洁。`
+
+// 工具定义与执行
+const AI_TOOLS={
+  navigate:async(args)=>{
+    const screen=args[0]?.trim()
+    if(screen)showScreen(screen)
+    const names={dashboard:'仪表盘',invoice:'发票上传',voucher:'记账凭证',accounts:'科目余额',reports:'财务报表',closing:'账期结转','tax-config':'税种配置','tax-center':'税务申报中心','tax-vat':'增值税','tax-surcharge':'附征税','tax-stamp':'印花税','tax-cit':'企业所得税','tax-iit':'个人所得税','tax-property':'房产/土地/车船税',employee:'员工档案',payroll:'薪资核算',expense:'费用报销',assets:'固定资产','asset-dep':'折旧管理',bank:'银行流水',cashier:'出纳管理',policy:'政策文档','rpt-template':'报表格式'}
+    return`已跳转到"${names[screen]||screen}"页面`
+  },
+  calc_vat:async(args)=>{
+    const y=parseInt(args[0])||new Date().getFullYear()
+    const m=parseInt(args[1])||new Date().getMonth()+1
+    const ySel=document.getElementById('vat-year'),mSel=document.getElementById('vat-month')
+    if(ySel)ySel.value=y;if(mSel)mSel.value=m
+    showScreen('tax-vat')
+    await calcVAT()
+    const payable=document.getElementById('vat-payable')?.textContent||'—'
+    return`已计算${y}年${m}月增值税，应纳税额：${payable}`
+  },
+  calc_cit:async(args)=>{
+    const y=parseInt(args[0])||new Date().getFullYear()
+    const q=parseInt(args[1])||Math.ceil((new Date().getMonth()+1)/3)
+    const ySel=document.getElementById('cit-year'),qSel=document.getElementById('cit-quarter')
+    if(ySel)ySel.value=y;if(qSel)qSel.value=q
+    showScreen('tax-cit')
+    await calcCIT()
+    const tax=document.getElementById('cit-tax')?.textContent||'—'
+    return`已计算${y}年第${q}季度企业所得税，应纳税额：${tax}`
+  },
+  calc_payroll:async(args)=>{
+    const y=parseInt(args[0])||new Date().getFullYear()
+    const m=parseInt(args[1])||new Date().getMonth()+1
+    const ySel=document.getElementById('pr-year'),mSel=document.getElementById('pr-month')
+    if(ySel)ySel.value=y;if(mSel)mSel.value=m
+    showScreen('payroll')
+    await calcPayroll()
+    return`已完成${y}年${m}月薪资核算，请在薪资核算页查看详情`
+  },
+  gen_reports:async(args)=>{
+    const y=parseInt(args[0])||new Date().getFullYear()
+    const m=parseInt(args[1])||new Date().getMonth()+1
+    const ySel=document.getElementById('rpt-year'),mSel=document.getElementById('rpt-month')
+    if(ySel)ySel.value=y;if(mSel)mSel.value=m
+    showScreen('reports')
+    await genReports()
+    return`已生成${y}年${m}月财务三大报表（资产负债表、利润表、现金流量表）`
+  },
+  calc_depreciation:async()=>{
+    showScreen('assets')
+    await calcDepreciation()
+    return'已完成本月固定资产折旧计提，折旧凭证已生成'
+  },
+  do_closing:async(args)=>{
+    const y=parseInt(args[0])||new Date().getFullYear()
+    const m=parseInt(args[1])||(new Date().getMonth())
+    const ySel=document.getElementById('close-year'),mSel=document.getElementById('close-month')
+    if(ySel)ySel.value=y;if(mSel)mSel.value=m
+    showScreen('closing')
+    await loadClosingCheck()
+    return`已跳转到账期结转页面，请确认${y}年${m}月结转信息后点击执行`
+  },
+  query_balances:async(args)=>{
+    const y=parseInt(args[0])||new Date().getFullYear()
+    const m=parseInt(args[1])||new Date().getMonth()+1
+    const ySel=document.getElementById('acct-year'),mSel=document.getElementById('acct-month')
+    if(ySel)ySel.value=y;if(mSel)mSel.value=m
+    showScreen('accounts')
+    await loadAccountBalances()
+    return`已查询${y}年${m}月科目余额表，请在页面中查看详情`
+  },
+  open_voucher:async()=>{
+    openVoucherModal()
+    return'已打开新建凭证窗口，请填写借贷分录'
+  },
+  open_upload:async()=>{
+    showScreen('invoice')
+    return'已跳转到发票上传页面，请点击或拖拽上传发票'
+  },
+  open_add_employee:async()=>{
+    showScreen('employee')
+    openEmpModal()
+    return'已打开添加员工窗口'
+  },
+  open_add_asset:async()=>{
+    showScreen('assets')
+    openAssetModal()
+    return'已打开录入固定资产窗口'
+  },
+  gen_iit:async(args)=>{
+    const y=parseInt(args[0])||new Date().getFullYear()
+    const m=parseInt(args[1])||new Date().getMonth()+1
+    const ySel=document.getElementById('iit-year'),mSel=document.getElementById('iit-month')
+    if(ySel)ySel.value=y;if(mSel)mSel.value=m
+    showScreen('tax-iit')
+    await genIITReport()
+    const total=document.getElementById('iit-total')?.textContent||'—'
+    return`已生成${y}年${m}月个税申报数据，合计代扣个税：${total}`
+  },
+  save_vat:async()=>{
+    await saveVATFiling()
+    return'增值税申报记录已保存'
+  },
+  add_policy:async()=>{
+    showScreen('policy')
+    openPolicyModal()
+    return'已打开添加政策窗口，请填写政策内容'
+  },
+  load_std_template:async()=>{
+    showScreen('rpt-template')
+    loadStdTemplates()
+    return'已加载国标报表格式，可在报表格式页查看'
+  },
+  gen_notes:async()=>{
+    showScreen('rpt-template')
+    // 切换到附注tab
+    document.querySelector('#screen-rpt-template .tab-btn:last-child')?.click()
+    await genNotes()
+    return'已生成财务报表附注内容，请在报表格式→附注页查看'
+  },
+  calc_surcharge:async()=>{showScreen('tax-surcharge');await calcSurcharge();return'已计算附征税'},
+  calc_all_tax:async()=>{showScreen('tax-center');await calcAllTax();return'已计算所有税种'},
+  open_expense:async()=>{showScreen('expense');await openExpenseModal();return'已打开报销单'},
+  run_depreciation:async()=>{showScreen('asset-dep');await runDepreciation();return'已计提折旧'},
+  bank_reconcile:async()=>{showScreen('cashier');await genBankReconcile();return'已生成余额调节表'}
+}
+
+// 解析并执行工具调用
+async function executeTool(toolStr){
+  const match=toolStr.match(/\[TOOL:(\w+)\(([^)]*)\)\]/)
+  if(!match)return null
+  const name=match[1],argsStr=match[2]
+  const args=argsStr?argsStr.split(',').map(s=>s.trim()):[]
+  const fn=AI_TOOLS[name]
+  if(!fn)return`未知工具：${name}`
+  try{
+    const result=await fn(args)
+    return result
+  }catch(e){
+    return`执行${name}时出错：${e.message}`
+  }
+}
+
+let aiHistory=[]
+let aiPanelOpen=true
+
+function toggleAIPanel(){
+  aiPanelOpen=!aiPanelOpen
+  document.getElementById('ai-panel').classList.toggle('collapsed',!aiPanelOpen)
+}
+
+async function sendAIMsg(){
+  const input=document.getElementById('ai-input')
+  const text=input.value.trim()
+  if(!text)return
+  input.value=''
+  input.style.height='auto'
+  appendAIMsg('user','我',text)
+  aiHistory.push({role:'user',content:text})
+  const typingId=appendTyping()
+  try{
+    // 注入激活的政策
+    let policyText=''
+    if(activePolicies.length>0){
+      policyText='\n\n=== 当前激活的政策规定（请严格遵循）===\n'+
+        activePolicies.map(p=>`【${p.title}】${p.effective_date?'生效日期：'+p.effective_date:''}\n${p.content}`).join('\n\n')
+    }
+    const systemWithPolicy=AI_SYSTEM+policyText
+
+    const resp=await fetch(AI_PROXY,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'auto',
+        messages:[{role:'system',content:systemWithPolicy},...aiHistory],
+        max_tokens:1000
+      })
+    })
+    const data=await resp.json()
+    removeTyping(typingId)
+    let reply=data.choices?.[0]?.message?.content||'抱歉，暂时无法响应。'
+
+    // 检查是否有工具调用
+    const toolMatch=reply.match(/\[TOOL:\w+\([^)]*\)\]/)
+    if(toolMatch){
+      // 执行工具
+      const execMsg=appendAIMsg('ai','账先生 AI','⚡ 正在执行操作...',true)
+      const toolResult=await executeTool(toolMatch[0])
+      // 移除执行中消息
+      execMsg?.remove()
+      // 清理回复中的工具调用标记
+      const cleanReply=reply.replace(/\[TOOL:\w+\([^)]*\)\]/,'').trim()
+      const finalReply=(cleanReply||'')+'\n\n✅ '+toolResult
+      aiHistory.push({role:'assistant',content:finalReply})
+      appendAIMsg('ai','账先生 AI',finalReply)
+    }else{
+      aiHistory.push({role:'assistant',content:reply})
+      appendAIMsg('ai','账先生 AI',reply)
+    }
+    if(aiHistory.length>30)aiHistory=aiHistory.slice(-30)
+  }catch(err){
+    removeTyping(typingId)
+    appendAIMsg('ai','账先生 AI',`⚠ 连接出错：${err.message}`)
+  }
+}
+
+function askAI(text){
+  document.getElementById('ai-input').value=text
+  sendAIMsg()
+}
+
+function appendAIMsg(role,from,text,returnEl=false){
+  const box=document.getElementById('ai-msgs')
+  const div=document.createElement('div')
+  div.className='ai-msg '+role
+  div.innerHTML=`<div class="ai-msg-from">${from}</div><div class="ai-msg-bubble">${text.replace(/\n/g,'<br>')}</div>`
+  box.appendChild(div)
+  box.scrollTop=box.scrollHeight
+  if(returnEl)return div
+}
+
+function appendTyping(){
+  const box=document.getElementById('ai-msgs')
+  const id='typing-'+Date.now()
+  const div=document.createElement('div')
+  div.className='ai-msg ai';div.id=id
+  div.innerHTML=`<div class="ai-msg-from">账先生 AI</div><div class="ai-msg-bubble"><div class="ai-typing"><span></span><span></span><span></span></div></div>`
+  box.appendChild(div)
+  box.scrollTop=box.scrollHeight
+  return id
+}
+
+function removeTyping(id){document.getElementById(id)?.remove()}
+
+function aiHandleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAIMsg()}
+  // 自动高度
+  const ta=e.target
+  ta.style.height='auto'
+  ta.style.height=Math.min(ta.scrollHeight,80)+'px'
+}
 
 init()
 </script>
